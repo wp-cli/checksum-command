@@ -1,2 +1,2 @@
 require:
-  - command.php
+  - checksum-command.php
