@@ -41,6 +41,11 @@ class Checksum_Command extends WP_CLI_Command {
 	 *
 	 * For security, avoids loading WordPress when verifying checksums.
 	 *
+	 * If you experience issues verifying from this command, ensure you are 
+	 * passing the relevant `--locale` and `--version` arguments according to 
+	 * the values from the `Dashboard->Updates` menu in the admin area of the 
+	 * site.
+	 *
 	 * ## OPTIONS
 	 *
 	 * [--version=<version>]
