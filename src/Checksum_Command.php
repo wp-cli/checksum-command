@@ -5,6 +5,8 @@ use \WP_CLI\Utils;
 /**
  * `wp checksum core` compares site’s core files with core at WordPress.org (via checksums).
  *
+ *
+ * `wp checksum` is a root command that is meant to get future additions like `wp checksum plugin` or `wp checksum theme`.
  * @package wp-cli
  */
 class Checksum_Command extends WP_CLI_Command {
