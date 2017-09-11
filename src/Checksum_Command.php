@@ -3,7 +3,7 @@
 use \WP_CLI\Utils;
 
 /**
- * Compares the site’s core files with core at WordPress.org (via checksums).
+ * `wp checksum core` compares site’s core files with core at WordPress.org (via checksums).
  *
  * @package wp-cli
  */
