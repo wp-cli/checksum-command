@@ -1,6 +1,6 @@
 {
     "name": "wp-cli/checksum-command",
-    "description": "Verify WordPress core checksums.",
+    "description": "Verifies file integrity by comparing to published checksums.",
     "type": "wp-cli-package",
     "homepage": "https://github.com/wp-cli/checksum-command",
     "support": {
