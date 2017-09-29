@@ -3,7 +3,7 @@
 use \WP_CLI\Utils;
 
 /**
- * Verify WordPress core checksums.
+ * Verifies file integrity by comparing to published checksums.
  *
  * @package wp-cli
  */
