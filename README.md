@@ -1,7 +1,7 @@
 wp-cli/checksum-command
 =======================
 
-Verify WordPress core checksums.
+Verifies file integrity by comparing to published checksums.
 
 [![Build Status](https://travis-ci.org/wp-cli/checksum-command.svg?branch=master)](https://travis-ci.org/wp-cli/checksum-command)
 
@@ -17,6 +17,11 @@ Downloads md5 checksums for the current version from WordPress.org, and
 compares those checksums against the currently installed files.
 
 For security, avoids loading WordPress when verifying checksums.
+
+If you experience issues verifying from this command, ensure you are 
+passing the relevant `--locale` and `--version` arguments according to 
+the values from the `Dashboard->Updates` menu in the admin area of the 
+site.
 
 **OPTIONS**
 
