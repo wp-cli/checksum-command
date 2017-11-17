@@ -65,11 +65,13 @@ Feature: Validate checksums for WordPress install
       """
     And the return code should be 0
 
-    When I run `wp core verify-checksums`
+    # Similarly if current WP_VERSION is nightly, trunk or old then will get "File should not exist" warnings, so STDERR may or may not be empty.
+    When I try `wp core verify-checksums`
     Then STDOUT should be:
       """
       Success: WordPress install verifies against checksums.
       """
+    And the return code should be 0
 
   Scenario: Verify core checksums with extra files
     Given a WP install
