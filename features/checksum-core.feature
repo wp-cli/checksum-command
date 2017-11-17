@@ -57,7 +57,13 @@ Feature: Validate checksums for WordPress install
 
   Scenario: Verify core checksums for a non US local
     Given a WP install
-    And I run `wp core download --locale=en_GB --version=4.3.1 --force`
+    # If current WP_VERSION is nightly, trunk or old then from checksum might not exist, so STDERR may or may not be empty.
+    And I try `wp core download --locale=en_GB --version=4.3.1 --force`
+    Then STDOUT should contain:
+      """
+      Success: WordPress downloaded.
+      """
+    And the return code should be 0
 
     When I run `wp core verify-checksums`
     Then STDOUT should be:
