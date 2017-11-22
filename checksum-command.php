@@ -9,4 +9,4 @@ if ( file_exists( $autoload ) ) {
 	require_once $autoload;
 }
 
-WP_CLI::add_command( 'checksum', 'Checksum_Command' );
+WP_CLI::add_command( 'checksum core', 'Core_Command' );
