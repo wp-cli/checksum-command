@@ -113,8 +113,8 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 			}
 		}
 
-		$core_checksums_files = array_filter( array_keys( $checksums ), array( $this, 'only_core_files_filter' ) );
-		$core_files           = $this->get_wp_core_files();
+		$core_checksums_files = array_filter( array_keys( $checksums ), array( $this, 'filter_file' ) );
+		$core_files           = $this->get_files( ABSPATH );
 		$additional_files     = array_diff( $core_files, $core_checksums_files );
 
 		if ( ! empty( $additional_files ) ) {
@@ -130,28 +130,15 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 		}
 	}
 
-	private function get_wp_core_files() {
-		$core_files = array();
-		try {
-			$files = new RecursiveIteratorIterator(
-				new RecursiveDirectoryIterator( ABSPATH, RecursiveDirectoryIterator::SKIP_DOTS ),
-				RecursiveIteratorIterator::CHILD_FIRST
-			);
-			foreach ( $files as $file_info ) {
-				$pathname = substr( $file_info->getPathname(), strlen( ABSPATH ) );
-				if ( $file_info->isFile() && ( 0 === strpos( $pathname, 'wp-admin/' ) || 0 === strpos( $pathname, 'wp-includes/' ) ) ) {
-					$core_files[] = str_replace( ABSPATH, '', $file_info->getPathname() );
-				}
-			}
-		} catch( Exception $e ) {
-			WP_CLI::error( $e->getMessage() );
-		}
-
-		return $core_files;
-	}
-
-	private function only_core_files_filter( $file ) {
-		return ( 0 === strpos( $file, 'wp-admin/' ) || 0 === strpos( $file, 'wp-includes/' ) );
+	/**
+	 * Whether to include the file in the verification or not.
+	 *
+	 * @param string $filepath Path to a file.
+	 *
+	 * @return bool
+	 */
+	protected function filter_file( $filepath ) {
+		return ( 0 === strpos( $filepath, 'wp-admin/' ) || 0 === strpos( $filepath, 'wp-includes/' ) );
 	}
 
 	/**
