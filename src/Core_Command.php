@@ -7,7 +7,7 @@ use \WP_CLI\Utils;
  *
  * @package wp-cli
  */
-class Checksum_Command extends WP_CLI_Command {
+class Core_Command extends WP_CLI_Command {
 
 	private static function _read( $url ) {
 		$headers = array('Accept' => 'application/json');
