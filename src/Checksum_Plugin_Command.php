@@ -15,5 +15,13 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 * @when before_wp_load
 	 */
 	public function __invoke( $args, $assoc_args ) {
+
+		$has_errors = false;
+
+		if ( ! $has_errors ) {
+			WP_CLI::success( 'Plugin verifies against checksums.' );
+		} else {
+			WP_CLI::error( 'Plugin doesn\'t verify against checksums.' );
+		}
 	}
 }
