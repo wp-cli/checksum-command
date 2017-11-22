@@ -77,7 +77,7 @@ class Core_Command extends WP_CLI_Command {
 	 *
 	 * @when before_wp_load
 	 */
-	public function core( $args, $assoc_args ) {
+	public function __invoke( $args, $assoc_args ) {
 		global $wp_version, $wp_local_package;
 
 		if ( ! empty( $assoc_args['version'] ) ) {
