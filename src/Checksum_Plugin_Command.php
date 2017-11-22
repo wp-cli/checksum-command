@@ -18,6 +18,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 		$fetcher = new \WP_CLI\Fetchers\Plugin();
 		$plugins = $fetcher->get_many( $args );
+		$all = \WP_CLI\Utils\get_flag_value( $assoc_args, 'all', false );
 
 		$has_errors = false;
 
