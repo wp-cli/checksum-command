@@ -16,12 +16,28 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 */
 	public function __invoke( $args, $assoc_args ) {
 
+		$fetcher = new \WP_CLI\Fetchers\Plugin();
+		$plugins = $fetcher->get_many( $args );
+
 		$has_errors = false;
 
+		// Iterate over plugins
+		//  - fetch plugin's checksums from wordpress.org server
+		//  - Iterate over plugin's files
+		//     - Verify plugin file checksum against downloaded checksum
+
 		if ( ! $has_errors ) {
-			WP_CLI::success( 'Plugin verifies against checksums.' );
+			WP_CLI::success(
+				count( $plugins ) > 1
+					? 'Plugins verify against checksums.'
+					: 'Plugin verifies against checksums.'
+			);
 		} else {
-			WP_CLI::error( 'Plugin doesn\'t verify against checksums.' );
+			WP_CLI::error(
+				count( $plugins ) > 1
+					? 'One or more plugins don\'t verify against checksums.'
+					: 'Plugin doesn\'t verify against checksums.'
+			);
 		}
 	}
 }
