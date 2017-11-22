@@ -3,11 +3,11 @@
 use \WP_CLI\Utils;
 
 /**
- * Verifies file integrity by comparing to published checksums.
+ * Verifies core file integrity by comparing to published checksums.
  *
  * @package wp-cli
  */
-class Core_Command extends WP_CLI_Command {
+class Checksum_Core_Command extends Checksum_Base_Command {
 
 	private static function _read( $url ) {
 		$headers = array('Accept' => 'application/json');
@@ -31,7 +31,6 @@ class Core_Command extends WP_CLI_Command {
 
 		return $offer;
 	}
-
 
 	/**
 	 * Verify WordPress files against WordPress.org's checksums.
