@@ -10,3 +10,6 @@ if ( file_exists( $autoload ) ) {
 }
 
 WP_CLI::add_command( 'checksum core', 'Core_Command' );
+if ( class_exists( 'WP_CLI\Dispatcher\CommandNamespace' ) ) {
+	WP_CLI::add_command( 'checksum', 'Checksum_Namespace' );
+}
