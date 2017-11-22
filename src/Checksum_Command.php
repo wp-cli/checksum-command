@@ -140,6 +140,70 @@ class Checksum_Command extends WP_CLI_Command {
 			WP_CLI::error( "WordPress install doesn't verify against checksums." );
 		}
 	}
+	
+	public function plugin( $args, $assoc_args ) {
+		global $wp_version, $wp_local_package;
+
+		if ( ! empty( $assoc_args['version'] ) ) {
+			$wp_version = $assoc_args['version'];
+		}
+
+		if ( ! empty( $assoc_args['locale'] ) ) {
+			$wp_local_package = $assoc_args['locale'];
+		}
+
+		if ( empty( $wp_version ) ) {
+			$details = self::get_wp_details();
+			$wp_version = $details['wp_version'];
+
+			if ( empty( $wp_local_package ) ) {
+				$wp_local_package = $details['wp_local_package'];
+			}
+		}
+
+		$checksums = self::get_core_checksums( $wp_version,
+			! empty( $wp_local_package ) ? $wp_local_package : 'en_US' );
+
+		if ( ! is_array( $checksums ) ) {
+			WP_CLI::error( "Couldn't get checksums from WordPress.org." );
+		}
+
+		$has_errors = false;
+		foreach ( $checksums as $file => $checksum ) {
+			// Skip files which get updated
+			if ( 'wp-content' == substr( $file, 0, 10 ) ) {
+				continue;
+			}
+
+			if ( ! file_exists( ABSPATH . $file ) ) {
+				WP_CLI::warning( "File doesn't exist: {$file}" );
+				$has_errors = true;
+				continue;
+			}
+
+			$md5_file = md5_file( ABSPATH . $file );
+			if ( $md5_file !== $checksum ) {
+				WP_CLI::warning( "File doesn't verify against checksum: {$file}" );
+				$has_errors = true;
+			}
+		}
+
+		$core_checksums_files = array_filter( array_keys( $checksums ), array( $this, 'only_core_files_filter' ) );
+		$core_files           = $this->get_wp_core_files();
+		$additional_files     = array_diff( $core_files, $core_checksums_files );
+
+		if ( ! empty( $additional_files ) ) {
+			foreach ( $additional_files as $additional_file ) {
+				WP_CLI::warning( "File should not exist: {$additional_file}" );
+			}
+		}
+
+		if ( ! $has_errors ) {
+			WP_CLI::success( "WordPress install verifies against checksums." );
+		} else {
+			WP_CLI::error( "WordPress install doesn't verify against checksums." );
+		}
+	}
 
 	private function get_wp_core_files() {
 		$core_files = array();
