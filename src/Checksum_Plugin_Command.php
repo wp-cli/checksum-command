@@ -12,6 +12,14 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	/**
 	 * Verify plugin files against WordPress.org's checksums.
 	 *
+	 * ## OPTIONS
+	 *
+	 * [<plugin>...]
+	 * : One or more plugins to verify.
+	 *
+	 * [--all]
+	 * : If set, all plugins will be verified.
+	 *
 	 * @when before_wp_load
 	 */
 	public function __invoke( $args, $assoc_args ) {
