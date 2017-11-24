@@ -47,4 +47,35 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			);
 		}
 	}
+
+	/**
+	 * Gets the checksums for the given version of plugin.
+	 *
+	 * @param string $version Version string to query.
+	 * @param string $plugin plugin string to query.
+	 * @return bool|array False on failure. An array of checksums on success.
+	 */
+	private static function get_plugin_checksums( $plugin, $version ) {
+		$url = 'https://api.wordpress.org/plugin/checksums/1.0/?' . http_build_query( compact( 'plugin', 'version' ), null, '&' );
+
+		$options = array(
+			'timeout' => 30
+		);
+
+		$headers = array(
+			'Accept' => 'application/json'
+		);
+		$response = Utils\http_request( 'GET', $url, null, $headers, $options );
+
+		if ( ! $response->success || 200 != $response->status_code )
+			return false;
+
+		$body = trim( $response->body );
+		$body = json_decode( $body, true );
+
+		if ( ! is_array( $body ) || ! isset( $body['checksums'] ) || ! is_array( $body['checksums'] ) )
+			return false;
+
+		return $body['checksums'];
+	}
 }
