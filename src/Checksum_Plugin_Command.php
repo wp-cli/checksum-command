@@ -31,14 +31,22 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 		$fetcher = new \WP_CLI\Fetchers\Plugin();
 		$plugins = $fetcher->get_many( $args );
-		$all = \WP_CLI\Utils\get_flag_value( $assoc_args, 'all', false );
+		$all     = \WP_CLI\Utils\get_flag_value( $assoc_args, 'all', false );
 
 		$has_errors = false;
 
-		// Iterate over plugins
-		//  - fetch plugin's checksums from wordpress.org server
-		//  - Iterate over plugin's files
-		//     - Verify plugin file checksum against downloaded checksum
+		foreach ( $plugins as $plugin ) {
+			$version = $this->get_plugin_version( $plugin->name );
+
+			if ( false === $version ) {
+				continue;
+			}
+
+			$checksums = $this->get_plugin_checksums( $plugin->name, $version );
+
+			//  - Iterate over plugin's files
+			//     - Verify plugin file checksum against downloaded checksum
+		}
 
 		if ( ! $has_errors ) {
 			WP_CLI::success(
@@ -56,35 +64,49 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	}
 
 	/**
+	 * Get the currently installed version for a given plugin.
+	 *
+	 * @param string $plugin Plugin to get the version for.
+	 *
+	 * @return string|false Installed version of the plugin, or false if not
+	 *                      found.
+	 */
+	private function get_plugin_version( $plugin ) {
+		// TODO: Fetch the currently installed version of the given plugin.
+		return '1.5.2';
+	}
+
+	/**
 	 * Gets the checksums for the given version of plugin.
 	 *
 	 * @param string $version Version string to query.
-	 * @param string $plugin plugin string to query.
+	 * @param string $plugin  plugin string to query.
+	 *
 	 * @return bool|array False on failure. An array of checksums on success.
 	 */
 	private function get_plugin_checksums( $plugin, $version ) {
 		$url = str_replace(
 			array(
 				'{slug}',
-				'{version}'
+				'{version}',
 			),
 			array(
 				$plugin,
-				$version
+				$version,
 			),
 			$this->url_template
 		);
 
 		$options = array(
-			'timeout' => 30
+			'timeout' => 30,
 		);
 
-		$headers = array(
-			'Accept' => 'application/json'
+		$headers  = array(
+			'Accept' => 'application/json',
 		);
 		$response = Utils\http_request( 'GET', $url, null, $headers, $options );
 
-		if ( ! $response->success || 200 != $response->status_code ) {
+		if ( ! $response->success || 200 !== $response->status_code ) {
 			return false;
 		}
 
