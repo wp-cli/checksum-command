@@ -17,6 +17,13 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	private $url_template = 'https://downloads.wordpress.org/plugin-checksums/{slug}/{version}.json';
 
 	/**
+	 * Cached plugin data for all installed plugins.
+	 *
+	 * @var array|null
+	 */
+	private $plugins_data;
+
+	/**
 	 * Verify plugin files against WordPress.org's checksums.
 	 *
 	 * ## OPTIONS
@@ -36,7 +43,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		$has_errors = false;
 
 		foreach ( $plugins as $plugin ) {
-			$version = $this->get_plugin_version( $plugin->name );
+			$version = $this->get_plugin_version( $plugin->file );
 
 			if ( false === $version ) {
 				continue;
@@ -66,14 +73,21 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	/**
 	 * Get the currently installed version for a given plugin.
 	 *
-	 * @param string $plugin Plugin to get the version for.
+	 * @param string $path Relative path to plugin file to get the version for.
 	 *
 	 * @return string|false Installed version of the plugin, or false if not
 	 *                      found.
 	 */
-	private function get_plugin_version( $plugin ) {
-		// TODO: Fetch the currently installed version of the given plugin.
-		return '1.5.2';
+	private function get_plugin_version( $path ) {
+		if ( ! isset( $this->plugins_data ) ) {
+			$this->plugins_data = get_plugins();
+		}
+
+		if ( ! array_key_exists( $path, $this->plugins_data ) ) {
+			return false;
+		}
+
+		return $this->plugins_data[ $path ]['Version'];
 	}
 
 	/**
