@@ -50,6 +50,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			$version = $this->get_plugin_version( $plugin->file );
 
 			if ( false === $version ) {
+				WP_CLI::warning( "Could not retrieve the version for plugin {$plugin->name}, skipping." );
 				continue;
 			}
 
