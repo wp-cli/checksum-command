@@ -40,6 +40,10 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		$plugins = $fetcher->get_many( $args );
 		$all     = \WP_CLI\Utils\get_flag_value( $assoc_args, 'all', false );
 
+		if ( empty( $plugins ) && ! $all ) {
+			WP_CLI::error( 'You need to specify either one or more plugin slugs to check or use the --all flag to check all plugins.' );
+		}
+
 		$errors = array();
 
 		foreach ( $plugins as $plugin ) {
