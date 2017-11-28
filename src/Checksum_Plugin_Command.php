@@ -33,6 +33,18 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 *
 	 * [--all]
 	 * : If set, all plugins will be verified.
+	 *
+	 * [--format=<format>]
+	 * : Render output in a specific format.
+	 * ---
+	 * default: table
+	 * options:
+	 *   - table
+	 *   - json
+	 *   - csv
+	 *   - yaml
+	 *   - count
+	 * ---
 	 */
 	public function __invoke( $args, $assoc_args ) {
 
@@ -63,10 +75,22 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 			$files = $this->get_plugin_files( $plugin->file );
 
+			foreach ( $checksums as $file => $checksum_array ) {
+				if ( ! array_key_exists( $file, $files ) ) {
+					$error['plugin_name'] = $plugin->name;
+					$error['file'] = $file;
+					$error['message'] = 'File is missing';
+					$errors[] = $error;
+				}
+			}
+
 			foreach ( $files as $file ) {
-				$result = $this->check_file( $file, $checksums );
+				$result = $this->check_file_checksum( $file, $checksums );
 				if ( true !== $result ) {
-					$errors[ $plugin ][ $file ] = $result;
+					$error['plugin_name'] = $plugin->name;
+					$error['file'] = $file;
+					$error['message'] = $result;
+					$errors[] = $error;
 				}
 			}
 		}
@@ -78,6 +102,9 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 					: 'Plugin verifies against checksums.'
 			);
 		} else {
+			$formatter = new \WP_CLI\Formatter( $assoc_args, array( 'plugin_name', 'file', 'message' ) );
+			$formatter->display_items( $errors );
+
 			WP_CLI::error(
 				count( $plugins ) > 1
 					? 'One or more plugins don\'t verify against checksums.'
@@ -172,7 +199,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 *
 	 * @return true|string
 	 */
-	private function check_file( $path, $checksums ) {
+	private function check_file_checksum( $path, $checksums ) {
 		// TODO: Compute the checksum and compare it to the provided one.
 		return true;
 	}
