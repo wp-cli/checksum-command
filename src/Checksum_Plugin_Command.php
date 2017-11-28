@@ -84,14 +84,16 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		);
 		$response = Utils\http_request( 'GET', $url, null, $headers, $options );
 
-		if ( ! $response->success || 200 != $response->status_code )
+		if ( ! $response->success || 200 != $response->status_code ) {
 			return false;
+		}
 
 		$body = trim( $response->body );
 		$body = json_decode( $body, true );
 
-		if ( ! is_array( $body ) || ! isset( $body['checksums'] ) || ! is_array( $body['checksums'] ) )
+		if ( ! is_array( $body ) || ! isset( $body['checksums'] ) || ! is_array( $body['checksums'] ) ) {
 			return false;
+		}
 
 		return $body['checksums'];
 	}
