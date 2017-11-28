@@ -56,6 +56,11 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 			$checksums = $this->get_plugin_checksums( $plugin->name, $version );
 
+			if ( false === $checksums ) {
+				WP_CLI::warning( "Could not retrieve the checksums for plugin {$plugin->name}, skipping." );
+				continue;
+			}
+
 			$files = $this->get_plugin_files( $plugin->file );
 
 			foreach ( $files as $file ) {
