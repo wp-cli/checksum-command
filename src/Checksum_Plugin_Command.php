@@ -10,6 +10,13 @@ use \WP_CLI\Utils;
 class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 	/**
+	 * URL template that points to the API endpoint to use.
+	 *
+	 * @var string
+	 */
+	private $url_template = 'https://downloads.wordpress.org/plugin-checksums/{slug}/{version}.json';
+
+	/**
 	 * Verify plugin files against WordPress.org's checksums.
 	 *
 	 * ## OPTIONS
@@ -55,8 +62,18 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 * @param string $plugin plugin string to query.
 	 * @return bool|array False on failure. An array of checksums on success.
 	 */
-	private static function get_plugin_checksums( $plugin, $version ) {
-		$url = 'https://api.wordpress.org/plugin/checksums/1.0/?' . http_build_query( compact( 'plugin', 'version' ), null, '&' );
+	private function get_plugin_checksums( $plugin, $version ) {
+		$url = str_replace(
+			array(
+				'{slug}',
+				'{version}'
+			),
+			array(
+				$plugin,
+				$version
+			),
+			$this->url_template
+		);
 
 		$options = array(
 			'timeout' => 30
