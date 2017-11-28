@@ -91,10 +91,10 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		$body = trim( $response->body );
 		$body = json_decode( $body, true );
 
-		if ( ! is_array( $body ) || ! isset( $body['checksums'] ) || ! is_array( $body['checksums'] ) ) {
+		if ( ! is_array( $body ) || ! isset( $body['files'] ) || ! is_array( $body['files'] ) ) {
 			return false;
 		}
 
-		return $body['checksums'];
+		return $body['files'];
 	}
 }
