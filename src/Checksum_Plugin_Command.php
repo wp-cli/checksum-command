@@ -56,8 +56,8 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	public function __invoke( $args, $assoc_args ) {
 
 		$fetcher = new \WP_CLI\Fetchers\Plugin();
-		$plugins = $fetcher->get_many( $args );
 		$all     = \WP_CLI\Utils\get_flag_value( $assoc_args, 'all', false );
+		$plugins = $fetcher->get_many( $all ? $this->get_all_plugin_names() : $args );
 
 		if ( empty( $plugins ) && ! $all ) {
 			WP_CLI::error( 'You need to specify either one or more plugin slugs to check or use the --all flag to check all plugins.' );
@@ -74,7 +74,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			$checksums = $this->get_plugin_checksums( $plugin->name, $version );
 
 			if ( false === $checksums ) {
-				WP_CLI::warning( "Could not retrieve the checksums for plugin {$plugin->name}, skipping." );
+				WP_CLI::warning( "Could not retrieve the checksums for version {$version} of plugin {$plugin->name}, skipping." );
 				continue;
 			}
 
@@ -196,6 +196,20 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		}
 
 		return $body['files'];
+	}
+
+	/**
+	 * Get the names of all installed plugins.
+	 *
+	 * @return array<string> Names of all installed plugins.
+	 */
+	private function get_all_plugin_names() {
+		$names = array();
+		foreach ( get_plugins() as $file => $details ) {
+			$names[] = Utils\get_plugin_name( $file );
+		}
+
+		return $names;
 	}
 
 	/**
