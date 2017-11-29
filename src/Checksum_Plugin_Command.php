@@ -81,7 +81,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			$files = $this->get_plugin_files( $plugin->file );
 
 			foreach ( $checksums as $file => $checksum_array ) {
-				if ( ! array_key_exists( $file, $files ) ) {
+				if ( ! in_array( $file, $files, true ) ) {
 					$this->add_error( $plugin->name, $file, 'File is missing' );
 				}
 			}
@@ -94,7 +94,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 				$result = $this->check_file_checksum( $file, $checksums[ $file ] );
 				if ( true !== $result ) {
-					$this->add_error( $plugin->name, $file, $result );
+					$this->add_error( $plugin->name, $file, is_string( $result ) ? $result : 'Checksum does not match' );
 				}
 			}
 		}
@@ -221,10 +221,6 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 * @return true|string
 	 */
 	private function check_file_checksum( $path, $checksums ) {
-		if ( empty( $checksums ) ) {
-			return 'File was added';
-		}
-
 		if ( $this->supports_sha256()
 		     && array_key_exists( 'sha256', $checksums ) ) {
 			$sha256 = $this->get_sha256( $this->get_absolute_path( $path ) );
