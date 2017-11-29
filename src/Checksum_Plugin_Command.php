@@ -245,7 +245,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 */
 	private function supports_sha256() {
 		// TODO: Check whether the current environment supports SHA-256.
-		return false;
+		return true;
 	}
 
 	/**
@@ -257,12 +257,11 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 * @return string
 	 */
 	private function get_sha256( $filepath ) {
-		// TODO: Calculate the 256-bit SHA-2 for the given file.
-		return '<not yet implemented>';
+		return hash_file( 'sha256', $filepath );
 	}
 
 	/**
-	 * Get the MD% of a given file.
+	 * Get the MD5 of a given file.
 	 *
 	 * @param string $filepath Absolute path to the file to calculate the MD5
 	 *                         for.
@@ -270,7 +269,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 * @return string
 	 */
 	private function get_md5( $filepath ) {
-		return md5_file( $filepath );
+		return hash_file( 'md5', $filepath );
 	}
 
 	/**
