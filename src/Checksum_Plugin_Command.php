@@ -92,7 +92,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 					continue;
 				}
 
-				$result = $this->check_file_checksum( $file, $checksums[ $file ] );
+				$result = $this->check_file_checksum( dirname( $plugin->file ) . '/' . $file, $checksums[ $file ] );
 				if ( true !== $result ) {
 					$this->add_error( $plugin->name, $file, is_string( $result ) ? $result : 'Checksum does not match' );
 				}
@@ -245,7 +245,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 */
 	private function supports_sha256() {
 		// TODO: Check whether the current environment supports SHA-256.
-		return true;
+		return false;
 	}
 
 	/**
@@ -270,8 +270,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 * @return string
 	 */
 	private function get_md5( $filepath ) {
-		// TODO: Calculate the MD5 for the given file.
-		return '<not yet implemented>';
+		return md5_file( $filepath );
 	}
 
 	/**
