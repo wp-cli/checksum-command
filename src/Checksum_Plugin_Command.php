@@ -24,6 +24,13 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	private $plugins_data;
 
 	/**
+	 * Array of detected errors.
+	 *
+	 * @var array
+	 */
+	private $errors = array();
+
+	/**
 	 * Verify plugin files against WordPress.org's checksums.
 	 *
 	 * ## OPTIONS
@@ -56,8 +63,6 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			WP_CLI::error( 'You need to specify either one or more plugin slugs to check or use the --all flag to check all plugins.' );
 		}
 
-		$errors = array();
-
 		foreach ( $plugins as $plugin ) {
 			$version = $this->get_plugin_version( $plugin->file );
 
@@ -77,33 +82,35 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 			foreach ( $checksums as $file => $checksum_array ) {
 				if ( ! array_key_exists( $file, $files ) ) {
-					$error['plugin_name'] = $plugin->name;
-					$error['file'] = $file;
-					$error['message'] = 'File is missing';
-					$errors[] = $error;
+					$this->add_error( $plugin->name, $file, 'File is missing' );
 				}
 			}
 
 			foreach ( $files as $file ) {
-				$result = $this->check_file_checksum( $file, $checksums );
+				if ( ! array_key_exists( $file, $checksums ) ) {
+					$this->add_error( $plugin->name, $file, 'File was added' );
+					continue;
+				}
+
+				$result = $this->check_file_checksum( $file, $checksums[ $file ] );
 				if ( true !== $result ) {
-					$error['plugin_name'] = $plugin->name;
-					$error['file'] = $file;
-					$error['message'] = $result;
-					$errors[] = $error;
+					$this->add_error( $plugin->name, $file, $result );
 				}
 			}
 		}
 
-		if ( empty( $errors ) ) {
+		if ( empty( $this->errors ) ) {
 			WP_CLI::success(
 				count( $plugins ) > 1
 					? 'Plugins verify against checksums.'
 					: 'Plugin verifies against checksums.'
 			);
 		} else {
-			$formatter = new \WP_CLI\Formatter( $assoc_args, array( 'plugin_name', 'file', 'message' ) );
-			$formatter->display_items( $errors );
+			$formatter = new \WP_CLI\Formatter(
+				$assoc_args,
+				array( 'plugin_name', 'file', 'message' )
+			);
+			$formatter->display_items( $this->errors );
 
 			WP_CLI::error(
 				count( $plugins ) > 1
@@ -111,6 +118,20 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 					: 'Plugin doesn\'t verify against checksums.'
 			);
 		}
+	}
+
+	/**
+	 * Add a new error to the array of detected errors.
+	 *
+	 * @param string $plugin_name Name of the plugin that had the error.
+	 * @param string $file Relative path to the file that had the error.
+	 * @param string $message Message explaining the error.
+	 */
+	private function add_error( $plugin_name, $file, $message ) {
+		$error['plugin_name'] = $plugin_name;
+		$error['file']        = $file;
+		$error['message']     = $message;
+		$this->errors[]       = $error;
 	}
 
 	/**
@@ -185,8 +206,8 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 * @return array<string> Array of files with their relative paths.
 	 */
 	private function get_plugin_files( $path ) {
-		// TODO: Fetch and return the lift of plugin files.
-		return array();
+		// TODO: Fetch and return the list of plugin files.
+		return $this->get_files( $this->get_absolute_path( $path ) );
 	}
 
 	/**
@@ -200,7 +221,70 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 * @return true|string
 	 */
 	private function check_file_checksum( $path, $checksums ) {
-		// TODO: Compute the checksum and compare it to the provided one.
+		if ( empty( $checksums ) ) {
+			return 'File was added';
+		}
+
+		if ( $this->supports_sha256()
+		     && array_key_exists( 'sha256', $checksums ) ) {
+			$sha256 = $this->get_sha256( $this->get_absolute_path( $path ) );
+
+			return $checksums['sha256'] === $sha256;
+		}
+
+		if ( ! array_key_exists( 'md5', $checksums ) ) {
+			return 'No matching checksum algorithm found';
+		}
+
+		$md5 = $this->get_md5( $this->get_absolute_path( $path ) );
+
+		return $checksums['md5'] === $md5;
+	}
+
+	/**
+	 * Check whether the current environment supports 256-bit SHA-2.
+	 *
+	 * @return bool
+	 */
+	private function supports_sha256() {
+		// TODO: Check whether the current environment supports SHA-256.
 		return true;
+	}
+
+	/**
+	 * Get the 256-bit SHA-2 of a given file.
+	 *
+	 * @param string $filepath Absolute path to the file to calculate the SHA-2
+	 *                         for.
+	 *
+	 * @return string
+	 */
+	private function get_sha256( $filepath ) {
+		// TODO: Calculate the 256-bit SHA-2 for the given file.
+		return '<not yet implemented>';
+	}
+
+	/**
+	 * Get the MD% of a given file.
+	 *
+	 * @param string $filepath Absolute path to the file to calculate the MD5
+	 *                         for.
+	 *
+	 * @return string
+	 */
+	private function get_md5( $filepath ) {
+		// TODO: Calculate the MD5 for the given file.
+		return '<not yet implemented>';
+	}
+
+	/**
+	 * Get the absolute path to a relative plugin file.
+	 *
+	 * @param string $path Relative path to get the absolute path for.
+	 *
+	 * @return string
+	 */
+	private function get_absolute_path( $path ) {
+		return WP_PLUGIN_DIR . '/' . plugin_dir_path( $path );
 	}
 }
