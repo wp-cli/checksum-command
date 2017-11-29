@@ -241,10 +241,12 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	/**
 	 * Check whether the current environment supports 256-bit SHA-2.
 	 *
+	 * Should be supported for PHP 5+, but we might find edge cases depending on
+	 * host.
+	 *
 	 * @return bool
 	 */
 	private function supports_sha256() {
-		// TODO: Check whether the current environment supports SHA-256.
 		return true;
 	}
 
