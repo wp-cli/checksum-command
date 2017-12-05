@@ -34,7 +34,7 @@ class Checksum_Command extends WP_CLI_Command {
 
 
 	/**
-	 * Verify WordPress files against WordPress.org's checksums.
+	 * Verifies WordPress files against WordPress.org's checksums.
 	 *
 	 * Downloads md5 checksums for the current version from WordPress.org, and
 	 * compares those checksums against the currently installed files.
@@ -166,7 +166,7 @@ class Checksum_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Get version information from `wp-includes/version.php`.
+	 * Gets version information from `wp-includes/version.php`.
 	 *
 	 * @return array {
 	 *     @type string $wp_version The WordPress version.
@@ -197,7 +197,7 @@ class Checksum_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Search for the value assigned to variable `$var_name` in PHP code `$code`.
+	 * Searches for the value assigned to variable `$var_name` in PHP code `$code`.
 	 *
 	 * This is equivalent to matching the `\$VAR_NAME = ([^;]+)` regular expression and returning
 	 * the first match either as a `string` or as an `integer` (depending if it's surrounded by
