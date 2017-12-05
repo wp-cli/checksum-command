@@ -9,7 +9,7 @@ Feature: Validate checksums for WordPress install
     When I run `wp core verify-checksums`
     Then STDOUT should be:
       """
-      Success: WordPress install verifies against checksums.
+      Success: WordPress installation verifies against checksums.
       """
 
   Scenario: Core checksums don't verify
@@ -20,7 +20,7 @@ Feature: Validate checksums for WordPress install
     Then STDERR should be:
       """
       Warning: File doesn't verify against checksum: readme.html
-      Error: WordPress install doesn't verify against checksums.
+      Error: WordPress installation doesn't verify against checksums.
       """
 
     When I run `rm readme.html`
@@ -30,7 +30,7 @@ Feature: Validate checksums for WordPress install
     Then STDERR should be:
       """
       Warning: File doesn't exist: readme.html
-      Error: WordPress install doesn't verify against checksums.
+      Error: WordPress installation doesn't verify against checksums.
       """
 
   Scenario: Verify core checksums without loading WordPress
@@ -40,19 +40,19 @@ Feature: Validate checksums for WordPress install
     When I run `wp core verify-checksums`
     Then STDOUT should be:
       """
-      Success: WordPress install verifies against checksums.
+      Success: WordPress installation verifies against checksums.
       """
 
     When I run `wp core verify-checksums --version=4.3 --locale=en_US`
     Then STDOUT should be:
       """
-      Success: WordPress install verifies against checksums.
+      Success: WordPress installation verifies against checksums.
       """
 
     When I try `wp core verify-checksums --version=4.2 --locale=en_US`
     Then STDERR should contain:
       """
-      Error: WordPress install doesn't verify against checksums.
+      Error: WordPress installation doesn't verify against checksums.
       """
 
   Scenario: Verify core checksums for a non US local
@@ -69,7 +69,7 @@ Feature: Validate checksums for WordPress install
     When I try `wp core verify-checksums`
     Then STDOUT should be:
       """
-      Success: WordPress install verifies against checksums.
+      Success: WordPress installation verifies against checksums.
       """
     And the return code should be 0
 
@@ -92,7 +92,7 @@ Feature: Validate checksums for WordPress install
       """
     And STDOUT should be:
       """
-      Success: WordPress install verifies against checksums.
+      Success: WordPress installation verifies against checksums.
       """
     And the return code should be 0
 
@@ -106,6 +106,6 @@ Feature: Validate checksums for WordPress install
     When I run `wp core verify-checksums`
     Then STDOUT should be:
       """
-      Success: WordPress install verifies against checksums.
+      Success: WordPress installation verifies against checksums.
       """
     And STDERR should be empty
