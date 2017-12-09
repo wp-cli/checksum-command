@@ -35,22 +35,22 @@ site.
 
     # Verify checksums
     $ wp core verify-checksums
-    Success: WordPress install verifies against checksums.
+    Success: WordPress installation verifies against checksums.
 
     # Verify checksums for given WordPress version
     $ wp core verify-checksums --version=4.0
-    Success: WordPress install verifies against checksums.
+    Success: WordPress installation verifies against checksums.
 
     # Verify checksums for given locale
     $ wp core verify-checksums --locale=en_US
-    Success: WordPress install verifies against checksums.
+    Success: WordPress installation verifies against checksums.
 
     # Verify checksums for given locale
     $ wp core verify-checksums --locale=ja
     Warning: File doesn't verify against checksum: wp-includes/version.php
     Warning: File doesn't verify against checksum: readme.html
     Warning: File doesn't verify against checksum: wp-config-sample.php
-    Error: WordPress install doesn't verify against checksums.
+    Error: WordPress installation doesn't verify against checksums.
 
 ## Installing
 
@@ -84,7 +84,7 @@ Once you've decided to commit the time to seeing your pull request through, [ple
 
 ## Support
 
-Github issues aren't for general support questions, but there are other venues you can try: http://wp-cli.org/#support
+Github issues aren't for general support questions, but there are other venues you can try: https://wp-cli.org/#support
 
 
 *This README.md is generated dynamically from the project's codebase using `wp scaffold package-readme` ([doc](https://github.com/wp-cli/scaffold-package-command#wp-scaffold-package-readme)). To suggest changes, please submit a pull request against the corresponding part of the codebase.*

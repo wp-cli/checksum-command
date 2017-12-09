@@ -23,7 +23,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	}
 
 	/**
-	 * Verify WordPress files against WordPress.org's checksums.
+	 * Verifies WordPress files against WordPress.org's checksums.
 	 *
 	 * Downloads md5 checksums for the current version from WordPress.org, and
 	 * compares those checksums against the currently installed files.
@@ -47,22 +47,22 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 *
 	 *     # Verify checksums
 	 *     $ wp core verify-checksums
-	 *     Success: WordPress install verifies against checksums.
+	 *     Success: WordPress installation verifies against checksums.
 	 *
 	 *     # Verify checksums for given WordPress version
 	 *     $ wp core verify-checksums --version=4.0
-	 *     Success: WordPress install verifies against checksums.
+	 *     Success: WordPress installation verifies against checksums.
 	 *
 	 *     # Verify checksums for given locale
 	 *     $ wp core verify-checksums --locale=en_US
-	 *     Success: WordPress install verifies against checksums.
+	 *     Success: WordPress installation verifies against checksums.
 	 *
 	 *     # Verify checksums for given locale
 	 *     $ wp core verify-checksums --locale=ja
 	 *     Warning: File doesn't verify against checksum: wp-includes/version.php
 	 *     Warning: File doesn't verify against checksum: readme.html
 	 *     Warning: File doesn't verify against checksum: wp-config-sample.php
-	 *     Error: WordPress install doesn't verify against checksums.
+	 *     Error: WordPress installation doesn't verify against checksums.
 	 *
 	 * @when before_wp_load
 	 */
@@ -124,9 +124,9 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 		}
 
 		if ( ! $has_errors ) {
-			WP_CLI::success( "WordPress install verifies against checksums." );
+			WP_CLI::success( "WordPress installation verifies against checksums." );
 		} else {
-			WP_CLI::error( "WordPress install doesn't verify against checksums." );
+			WP_CLI::error( "WordPress installation doesn't verify against checksums." );
 		}
 	}
 
@@ -142,7 +142,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	}
 
 	/**
-	 * Get version information from `wp-includes/version.php`.
+	 * Gets version information from `wp-includes/version.php`.
 	 *
 	 * @return array {
 	 *     @type string $wp_version The WordPress version.
@@ -173,7 +173,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	}
 
 	/**
-	 * Search for the value assigned to variable `$var_name` in PHP code `$code`.
+	 * Searches for the value assigned to variable `$var_name` in PHP code `$code`.
 	 *
 	 * This is equivalent to matching the `\$VAR_NAME = ([^;]+)` regular expression and returning
 	 * the first match either as a `string` or as an `integer` (depending if it's surrounded by

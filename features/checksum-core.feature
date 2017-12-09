@@ -9,7 +9,7 @@ Feature: Validate checksums for WordPress install
     When I run `wp core verify-checksums`
     Then STDOUT should be:
       """
-      Success: WordPress install verifies against checksums.
+      Success: WordPress installation verifies against checksums.
       """
 
   Scenario: Core checksums don't verify
@@ -20,7 +20,7 @@ Feature: Validate checksums for WordPress install
     Then STDERR should be:
       """
       Warning: File doesn't verify against checksum: readme.html
-      Error: WordPress install doesn't verify against checksums.
+      Error: WordPress installation doesn't verify against checksums.
       """
 
     When I run `rm readme.html`
@@ -30,7 +30,7 @@ Feature: Validate checksums for WordPress install
     Then STDERR should be:
       """
       Warning: File doesn't exist: readme.html
-      Error: WordPress install doesn't verify against checksums.
+      Error: WordPress installation doesn't verify against checksums.
       """
 
   Scenario: Verify core checksums without loading WordPress
@@ -40,30 +40,38 @@ Feature: Validate checksums for WordPress install
     When I run `wp core verify-checksums`
     Then STDOUT should be:
       """
-      Success: WordPress install verifies against checksums.
+      Success: WordPress installation verifies against checksums.
       """
 
     When I run `wp core verify-checksums --version=4.3 --locale=en_US`
     Then STDOUT should be:
       """
-      Success: WordPress install verifies against checksums.
+      Success: WordPress installation verifies against checksums.
       """
 
     When I try `wp core verify-checksums --version=4.2 --locale=en_US`
     Then STDERR should contain:
       """
-      Error: WordPress install doesn't verify against checksums.
+      Error: WordPress installation doesn't verify against checksums.
       """
 
   Scenario: Verify core checksums for a non US local
     Given a WP install
-    And I run `wp core download --locale=en_GB --version=4.3.1 --force`
+    # If current WP_VERSION is nightly, trunk or old then from checksum might not exist, so STDERR may or may not be empty.
+    And I try `wp core download --locale=en_GB --version=4.3.1 --force`
+    Then STDOUT should contain:
+      """
+      Success: WordPress downloaded.
+      """
+    And the return code should be 0
 
-    When I run `wp core verify-checksums`
+    # Similarly if current WP_VERSION is nightly, trunk or old then will get "File should not exist" warnings, so STDERR may or may not be empty.
+    When I try `wp core verify-checksums`
     Then STDOUT should be:
       """
-      Success: WordPress install verifies against checksums.
+      Success: WordPress installation verifies against checksums.
       """
+    And the return code should be 0
 
   Scenario: Verify core checksums with extra files
     Given a WP install
@@ -77,15 +85,16 @@ Feature: Validate checksums for WordPress install
       """
     Then the wp-includes/extra-file.txt file should exist
 
-    When I run `wp core verify-checksums`
+    When I try `wp core verify-checksums`
     Then STDERR should be:
       """
       Warning: File should not exist: wp-includes/extra-file.txt
       """
     And STDOUT should be:
       """
-      Success: WordPress install verifies against checksums.
+      Success: WordPress installation verifies against checksums.
       """
+    And the return code should be 0
 
   Scenario: Verify core checksums with a plugin that has wp-admin
     Given a WP install
@@ -97,6 +106,6 @@ Feature: Validate checksums for WordPress install
     When I run `wp core verify-checksums`
     Then STDOUT should be:
       """
-      Success: WordPress install verifies against checksums.
+      Success: WordPress installation verifies against checksums.
       """
     And STDERR should be empty
