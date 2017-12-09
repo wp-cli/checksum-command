@@ -31,7 +31,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	private $errors = array();
 
 	/**
-	 * Verify plugin files against WordPress.org's checksums.
+	 * Verifies plugin files against WordPress.org's checksums.
 	 *
 	 * ## OPTIONS
 	 *
