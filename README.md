@@ -9,6 +9,12 @@ Quick links: [Using](#using) | [Installing](#installing) | [Contributing](#contr
 
 ## Using
 
+This package implements the following commands:
+
+### wp checksum core
+
+Verifies WordPress files against WordPress.org's checksums.
+
 ~~~
 wp checksum core [--version=<version>] [--locale=<locale>]
 ~~~
@@ -51,6 +57,36 @@ site.
     Warning: File doesn't verify against checksum: readme.html
     Warning: File doesn't verify against checksum: wp-config-sample.php
     Error: WordPress installation doesn't verify against checksums.
+
+
+
+### wp checksum plugin
+
+Verifies plugin files against WordPress.org's checksums.
+
+~~~
+wp checksum plugin [<plugin>...] [--all] [--format=<format>]
+~~~
+
+**OPTIONS**
+
+	[<plugin>...]
+		One or more plugins to verify.
+
+	[--all]
+		If set, all plugins will be verified.
+
+	[--format=<format>]
+		Render output in a specific format.
+		---
+		default: table
+		options:
+		  - table
+		  - json
+		  - csv
+		  - yaml
+		  - count
+		---
 
 ## Installing
 
