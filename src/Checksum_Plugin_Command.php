@@ -41,6 +41,10 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 * [--all]
 	 * : If set, all plugins will be verified.
 	 *
+	 * [--strict]
+	 * : If set, even "soft changes" like readme.txt changes will trigger
+	 * checksum errors.
+	 *
 	 * [--format=<format>]
 	 * : Render output in a specific format.
 	 * ---
@@ -57,6 +61,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 		$fetcher = new \WP_CLI\Fetchers\Plugin();
 		$all     = \WP_CLI\Utils\get_flag_value( $assoc_args, 'all', false );
+		$strict  = \WP_CLI\Utils\get_flag_value( $assoc_args, 'strict', false );
 		$plugins = $fetcher->get_many( $all ? $this->get_all_plugin_names() : $args );
 
 		if ( empty( $plugins ) && ! $all ) {
@@ -89,6 +94,10 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			foreach ( $files as $file ) {
 				if ( ! array_key_exists( $file, $checksums ) ) {
 					$this->add_error( $plugin->name, $file, 'File was added' );
+					continue;
+				}
+
+				if ( ! $strict && $this->is_soft_change_file( $file ) ) {
 					continue;
 				}
 
@@ -297,5 +306,31 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 */
 	private function get_absolute_path( $path ) {
 		return WP_PLUGIN_DIR . '/' . $path;
+	}
+
+	/**
+	 * Return a list of files that only trigger checksum errors in strict mode.
+	 *
+	 * @return array<string> Array of file names.
+	 */
+	private function get_soft_change_files() {
+		static $files = array(
+			'readme.txt',
+		);
+
+		return $files;
+	}
+
+	/**
+	 * Check whether a given file will only trigger checksum errors in strict
+	 * mode.
+	 *
+	 * @param string $file File to check.
+	 *
+	 * @return bool Whether the file only triggers checksum errors in strict
+	 * mode.
+	 */
+	private function is_soft_change_file( $file ) {
+		return in_array( $file, $this->get_soft_change_files(), true );
 	}
 }
