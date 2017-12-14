@@ -3,11 +3,11 @@ Feature: Validate checksums for WordPress plugins
   Scenario: Verify plugin checksums
     Given a WP install
 
-    When I run `wp plugin install https://downloads.wordpress.org/plugins/test-plugin-3.test-tag.zip`
+    When I run `wp plugin install duplicate-post --version=3.2.1`
     Then STDOUT should not be empty
     And STDERR should be empty
 
-    When I run `wp checksum plugin test-plugin-3`
+    When I run `wp checksum plugin duplicate-post`
     Then STDOUT should be:
       """
       Success: Plugin verifies against checksums.
@@ -16,25 +16,44 @@ Feature: Validate checksums for WordPress plugins
   Scenario: Modified plugin doesn't verify
     Given a WP install
 
-    When I run `wp plugin install https://downloads.wordpress.org/plugins/test-plugin-3.test-tag.zip`
+    When I run `wp plugin install duplicate-post --version=3.2.1`
     Then STDOUT should not be empty
     And STDERR should be empty
 
-    Given "WordPress" replaced with "Wordpress" in the wp-content/plugins/test-plugin-3/README.md file
+    Given "Duplicate Post" replaced with "Different Name" in the wp-content/plugins/duplicate-post/duplicate-post.php file
 
-    When I run `wp checksum plugin test-plugin-3`
-    Then STDERR should be:
+    When I try `wp checksum plugin duplicate-post --format=json`
+    Then STDOUT should contain:
       """
-      Warning: File doesn't verify against checksum: README.md
+      "plugin_name":"duplicate-post","file":"duplicate-post.php","message":"Checksum does not match"
+      """
+    And STDERR should be:
+      """
       Error: Plugin doesn't verify against checksums.
       """
 
-    When I run `rm wp-content/plugins/test-plugin-3/README.md`
+    When I run `rm wp-content/plugins/duplicate-post/duplicate-post.css`
     Then STDERR should be empty
 
-    When I try `wp checksum plugin test-plugin-3`
-    Then STDERR should be:
+    When I try `wp checksum plugin duplicate-post --format=json`
+    Then STDOUT should contain:
       """
-      Warning: File doesn't exist: README.md
+      "plugin_name":"duplicate-post","file":"duplicate-post.css","message":"File is missing"
+      """
+    And STDERR should be:
+      """
+      Error: Plugin doesn't verify against checksums.
+      """
+
+    When I run `touch wp-content/plugins/duplicate-post/additional-file.php`
+    Then STDERR should be empty
+
+    When I try `wp checksum plugin duplicate-post --format=json`
+    Then STDOUT should contain:
+      """
+      "plugin_name":"duplicate-post","file":"additional-file.php","message":"File was added"
+      """
+    And STDERR should be:
+      """
       Error: Plugin doesn't verify against checksums.
       """
