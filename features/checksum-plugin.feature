@@ -57,3 +57,24 @@ Feature: Validate checksums for WordPress plugins
       """
       Error: Plugin doesn't verify against checksums.
       """
+
+  Scenario: Soft changes are only reported in strict mode
+    Given a WP install
+
+    When I run `wp plugin install duplicate-post --version=3.2.1`
+    Then STDOUT should not be empty
+    And STDERR should be empty
+
+    When I run `wp checksum plugin duplicate-post`
+    Then STDOUT should be:
+      """
+      Success: Plugin verifies against checksums.
+      """
+    And STDERR should be empty
+
+    When I try `wp checksum plugin duplicate-post --strict`
+    Then STDOUT should not be empty
+    And STDERR should contain:
+      """
+      Error: Plugin doesn't verify against checksums.
+      """
