@@ -65,7 +65,7 @@ Feature: Validate checksums for WordPress plugins
     Then STDOUT should not be empty
     And STDERR should be empty
 
-    Given "Duplicate Post" replaced with "Different Name" in the wp-content/plugins/duplicate-post/README.txt file
+    Given "Duplicate Post" replaced with "Different Name" in the wp-content/plugins/duplicate-post/readme.txt file
 
     When I run `wp checksum plugin duplicate-post`
     Then STDOUT should be:
