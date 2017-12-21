@@ -29,7 +29,7 @@ class Checksum_Base_Command extends WP_CLI_Command {
 	/**
 	 * Recursively get the list of files for a given path.
 	 *
-	 * @param string $path Root parse to start the recursive traversal in.
+	 * @param string $path Root path to start the recursive traversal in.
 	 *
 	 * @return array<string>
 	 */
