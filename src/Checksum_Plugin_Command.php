@@ -249,7 +249,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		     && array_key_exists( 'sha256', $checksums ) ) {
 			$sha256 = $this->get_sha256( $this->get_absolute_path( $path ) );
 
-			return $checksums['sha256'] === $sha256;
+			return in_array( $sha256, (array) $checksums['sha256'], true );
 		}
 
 		if ( ! array_key_exists( 'md5', $checksums ) ) {
@@ -258,7 +258,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 		$md5 = $this->get_md5( $this->get_absolute_path( $path ) );
 
-		return $checksums['md5'] === $md5;
+		return in_array( $md5, (array) $checksums['md5'], true );
 	}
 
 	/**

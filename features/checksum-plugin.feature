@@ -65,6 +65,8 @@ Feature: Validate checksums for WordPress plugins
     Then STDOUT should not be empty
     And STDERR should be empty
 
+    Given "Duplicate Post" replaced with "Different Name" in the wp-content/plugins/duplicate-post/README.txt file
+
     When I run `wp checksum plugin duplicate-post`
     Then STDOUT should be:
       """
@@ -78,3 +80,17 @@ Feature: Validate checksums for WordPress plugins
       """
       Error: Plugin doesn't verify against checksums.
       """
+
+  Scenario: Multiple checksums for a single file are supported
+    Given a WP install
+
+    When I run `wp plugin install wptouch --version=4.3.22`
+    Then STDOUT should not be empty
+    And STDERR should be empty
+
+    When I run `wp checksum plugin wptouch`
+    Then STDOUT should be:
+      """
+      Success: Plugin verifies against checksums.
+      """
+    And STDERR should be empty
