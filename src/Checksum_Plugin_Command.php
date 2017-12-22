@@ -121,7 +121,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		}
 
 		$total     = count( $plugins );
-		$failures  = count( $this->errors );
+		$failures  = count( array_unique( array_column( $this->errors, 'plugin_name' ) ) );
 		$successes = $total - $failures - $skips;
 
 		\WP_CLI\Utils\report_batch_operation_results(
