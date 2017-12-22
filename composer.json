@@ -33,7 +33,8 @@
         },
         "bundled": true,
         "commands": [
-            "checksum core"
+            "checksum core",
+            "checksum plugin"
         ]
     }
 }
