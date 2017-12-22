@@ -234,16 +234,15 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 * @return array<string> Array of files with their relative paths.
 	 */
 	private function get_plugin_files( $path ) {
-		$absolute_path = $this->get_absolute_path( $path );
+		$folder = dirname( $this->get_absolute_path( $path ) );
 
 		// Return single file plugins immediately, to avoid iterating over the
 		// entire plugins folder.
-		if ( is_file( $absolute_path ) ) {
-			return (array) $absolute_path;
+		if ( WP_PLUGIN_DIR === $folder ) {
+			return (array) $path;
 		}
 
-		$folder = trailingslashit( dirname( $absolute_path ) );
-		return $this->get_files( $folder );
+		return $this->get_files( trailingslashit( $folder ) );
 	}
 
 	/**
