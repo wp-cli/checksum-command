@@ -81,6 +81,8 @@ Feature: Validate checksums for WordPress plugins
       Error: Plugin doesn't verify against checksums.
       """
 
+  # WPTouch 4.3.22 contains multiple checksums for some of its files.
+  # See https://github.com/wp-cli/checksum-command/issues/24
   Scenario: Multiple checksums for a single file are supported
     Given a WP install
 
