@@ -68,11 +68,14 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			WP_CLI::error( 'You need to specify either one or more plugin slugs to check or use the --all flag to check all plugins.' );
 		}
 
+		$skips = 0;
+
 		foreach ( $plugins as $plugin ) {
 			$version = $this->get_plugin_version( $plugin->file );
 
 			if ( false === $version ) {
 				WP_CLI::warning( "Could not retrieve the version for plugin {$plugin->name}, skipping." );
+				$skips++;
 				continue;
 			}
 
@@ -80,6 +83,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 			if ( false === $checksums ) {
 				WP_CLI::warning( "Could not retrieve the checksums for version {$version} of plugin {$plugin->name}, skipping." );
+				$skips++;
 				continue;
 			}
 
@@ -108,25 +112,26 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			}
 		}
 
-		if ( empty( $this->errors ) ) {
-			WP_CLI::success(
-				count( $plugins ) > 1
-					? 'Plugins verify against checksums.'
-					: 'Plugin verifies against checksums.'
-			);
-		} else {
+		if ( ! empty( $this->errors ) ) {
 			$formatter = new \WP_CLI\Formatter(
 				$assoc_args,
 				array( 'plugin_name', 'file', 'message' )
 			);
 			$formatter->display_items( $this->errors );
-
-			WP_CLI::error(
-				count( $plugins ) > 1
-					? 'One or more plugins don\'t verify against checksums.'
-					: 'Plugin doesn\'t verify against checksums.'
-			);
 		}
+
+		$total     = count( $plugins );
+		$failures  = count( $this->errors );
+		$successes = $total - $failures - $skips;
+
+		\WP_CLI\Utils\report_batch_operation_results(
+			'plugin',
+			'verify',
+			$total,
+			$successes,
+			$failures,
+			$skips
+		);
 	}
 
 	/**
