@@ -10,7 +10,7 @@ Feature: Validate checksums for WordPress plugins
     When I run `wp checksum plugin duplicate-post`
     Then STDOUT should be:
       """
-      Success: Plugin verifies against checksums.
+      Success: Verified 1 of 1 plugins.
       """
 
   Scenario: Modified plugin doesn't verify
@@ -29,7 +29,7 @@ Feature: Validate checksums for WordPress plugins
       """
     And STDERR should be:
       """
-      Error: Plugin doesn't verify against checksums.
+      Error: No plugins verified (1 failed).
       """
 
     When I run `rm wp-content/plugins/duplicate-post/duplicate-post.css`
@@ -42,7 +42,7 @@ Feature: Validate checksums for WordPress plugins
       """
     And STDERR should be:
       """
-      Error: Plugin doesn't verify against checksums.
+      Error: No plugins verified (1 failed).
       """
 
     When I run `touch wp-content/plugins/duplicate-post/additional-file.php`
@@ -55,7 +55,7 @@ Feature: Validate checksums for WordPress plugins
       """
     And STDERR should be:
       """
-      Error: Plugin doesn't verify against checksums.
+      Error: No plugins verified (1 failed).
       """
 
   Scenario: Soft changes are only reported in strict mode
@@ -70,7 +70,7 @@ Feature: Validate checksums for WordPress plugins
     When I run `wp checksum plugin duplicate-post`
     Then STDOUT should be:
       """
-      Success: Plugin verifies against checksums.
+      Success: Verified 1 of 1 plugins.
       """
     And STDERR should be empty
 
@@ -78,7 +78,7 @@ Feature: Validate checksums for WordPress plugins
     Then STDOUT should not be empty
     And STDERR should contain:
       """
-      Error: Plugin doesn't verify against checksums.
+      Error: No plugins verified (1 failed).
       """
 
   # WPTouch 4.3.22 contains multiple checksums for some of its files.
@@ -93,7 +93,7 @@ Feature: Validate checksums for WordPress plugins
     When I run `wp checksum plugin wptouch`
     Then STDOUT should be:
       """
-      Success: Plugin verifies against checksums.
+      Success: Verified 1 of 1 plugins.
       """
     And STDERR should be empty
 
