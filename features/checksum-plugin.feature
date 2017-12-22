@@ -96,3 +96,13 @@ Feature: Validate checksums for WordPress plugins
       Success: Plugin verifies against checksums.
       """
     And STDERR should be empty
+
+  Scenario: Throws an error if provided with neither plugin names nor the --all flag
+    Given a WP install
+
+    When I try `wp checksum plugin`
+    Then STDERR should contain:
+      """
+      You need to specify either one or more plugin slugs to check or use the --all flag to check all plugins.
+      """
+    And STDOUT should be empty
