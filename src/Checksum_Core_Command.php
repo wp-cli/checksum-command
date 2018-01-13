@@ -138,7 +138,10 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 * @return bool
 	 */
 	protected function filter_file( $filepath ) {
-		return ( 0 === strpos( $filepath, 'wp-admin/' ) || 0 === strpos( $filepath, 'wp-includes/' ) );
+		return ( 0 === strpos( $filepath, 'wp-admin/' )
+			|| 0 === strpos( $filepath, 'wp-includes/' )
+			|| 1 === preg_match( '/^wp-(?!config\.php)([^\/]*)$/', $filepath )
+		);
 	}
 
 	/**
