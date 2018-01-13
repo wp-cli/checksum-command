@@ -96,6 +96,29 @@ Feature: Validate checksums for WordPress install
       """
     And the return code should be 0
 
+    Scenario: Verify core checksums when extra files prefixed with 'wp-' are included in WordPress root
+      Given a WP install
+
+      When I run `wp core update`
+      Then STDOUT should not be empty
+
+      Given a wp-extra-file.php file:
+        """
+        hello world
+        """
+      Then the wp-extra-file.php file should exist
+
+      When I try `wp core verify-checksums`
+      Then STDERR should be:
+        """
+        Warning: File should not exist: wp-extra-file.php
+        """
+      And STDOUT should be:
+        """
+        Success: WordPress installation verifies against checksums.
+        """
+      And the return code should be 0
+
   Scenario: Verify core checksums with a plugin that has wp-admin
     Given a WP install
     And a wp-content/plugins/akismet/wp-admin/extra-file.txt file:
