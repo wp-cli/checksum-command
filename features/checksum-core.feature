@@ -98,15 +98,10 @@ Feature: Validate checksums for WordPress install
 
     Scenario: Verify core checksums when extra files prefixed with 'wp-' are included in WordPress root
       Given a WP install
-
-      When I run `wp core update`
-      Then STDOUT should not be empty
-
-      Given a wp-extra-file.php file:
+      And a wp-extra-file.php file:
         """
         hello world
         """
-      Then the wp-extra-file.php file should exist
 
       When I try `wp core verify-checksums`
       Then STDERR should be:
