@@ -106,3 +106,36 @@ Feature: Validate checksums for WordPress plugins
       You need to specify either one or more plugin slugs to check or use the --all flag to check all plugins.
       """
     And STDOUT should be empty
+
+  Scenario: Ensure a plugin cannot filter itself out of the checks
+    Given a WP install
+    And these installed and active plugins:
+      """
+      duplicate-post
+      wptouch
+      """
+    And a wp-content/mu-plugins/hide-qm-plugin.php file:
+      """
+      <?php
+      /**
+       * Plugin Name: Hide Duplicate Post plugin
+       */
+
+       add_filter( 'all_plugins', function( $all_plugins ) {
+          unset( $all_plugins['duplicate-post/duplicate-post.php'] );
+          return $all_plugins;
+       } );
+       """
+    And "Duplicate Post" replaced with "Different Name" in the wp-content/plugins/duplicate-post/duplicate-post.php file
+
+    When I run `wp plugin list --fields=name`
+    Then STDOUT should not contain:
+      """
+      duplicate-post
+      """
+
+    When I try `wp checksum plugin --all --format=json`
+    Then STDOUT should contain:
+      """
+      "plugin_name":"duplicate-post","file":"duplicate-post.php","message":"Checksum does not match"
+      """
