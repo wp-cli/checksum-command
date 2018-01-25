@@ -1,6 +1,8 @@
 <?php
 
-use \WP_CLI\Utils;
+use WP_CLI\Fetchers;
+use WP_CLI\Formatter;
+use WP_CLI\Utils;
 
 /**
  * Verifies plugin file integrity by comparing to published checksums.
@@ -59,9 +61,9 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 */
 	public function __invoke( $args, $assoc_args ) {
 
-		$fetcher = new \WP_CLI\Fetchers\Plugin();
-		$all     = \WP_CLI\Utils\get_flag_value( $assoc_args, 'all', false );
-		$strict  = \WP_CLI\Utils\get_flag_value( $assoc_args, 'strict', false );
+		$fetcher = new Fetchers\UnfilteredPlugin();
+		$all     = Utils\get_flag_value( $assoc_args, 'all', false );
+		$strict  = Utils\get_flag_value( $assoc_args, 'strict', false );
 		$plugins = $fetcher->get_many( $all ? $this->get_all_plugin_names() : $args );
 
 		if ( empty( $plugins ) && ! $all ) {
@@ -113,7 +115,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		}
 
 		if ( ! empty( $this->errors ) ) {
-			$formatter = new \WP_CLI\Formatter(
+			$formatter = new Formatter(
 				$assoc_args,
 				array( 'plugin_name', 'file', 'message' )
 			);
@@ -124,7 +126,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		$failures  = count( array_unique( array_column( $this->errors, 'plugin_name' ) ) );
 		$successes = $total - $failures - $skips;
 
-		\WP_CLI\Utils\report_batch_operation_results(
+		Utils\report_batch_operation_results(
 			'plugin',
 			'verify',
 			$total,
