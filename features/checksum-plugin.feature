@@ -7,7 +7,7 @@ Feature: Validate checksums for WordPress plugins
     Then STDOUT should not be empty
     And STDERR should be empty
 
-    When I run `wp checksum plugin duplicate-post`
+    When I run `wp plugin verify-checksums duplicate-post`
     Then STDOUT should be:
       """
       Success: Verified 1 of 1 plugins.
@@ -22,7 +22,7 @@ Feature: Validate checksums for WordPress plugins
 
     Given "Duplicate Post" replaced with "Different Name" in the wp-content/plugins/duplicate-post/duplicate-post.php file
 
-    When I try `wp checksum plugin duplicate-post --format=json`
+    When I try `wp plugin verify-checksums duplicate-post --format=json`
     Then STDOUT should contain:
       """
       "plugin_name":"duplicate-post","file":"duplicate-post.php","message":"Checksum does not match"
@@ -35,7 +35,7 @@ Feature: Validate checksums for WordPress plugins
     When I run `rm wp-content/plugins/duplicate-post/duplicate-post.css`
     Then STDERR should be empty
 
-    When I try `wp checksum plugin duplicate-post --format=json`
+    When I try `wp plugin verify-checksums duplicate-post --format=json`
     Then STDOUT should contain:
       """
       "plugin_name":"duplicate-post","file":"duplicate-post.css","message":"File is missing"
@@ -48,7 +48,7 @@ Feature: Validate checksums for WordPress plugins
     When I run `touch wp-content/plugins/duplicate-post/additional-file.php`
     Then STDERR should be empty
 
-    When I try `wp checksum plugin duplicate-post --format=json`
+    When I try `wp plugin verify-checksums duplicate-post --format=json`
     Then STDOUT should contain:
       """
       "plugin_name":"duplicate-post","file":"additional-file.php","message":"File was added"
@@ -67,14 +67,14 @@ Feature: Validate checksums for WordPress plugins
 
     Given "Duplicate Post" replaced with "Different Name" in the wp-content/plugins/duplicate-post/readme.txt file
 
-    When I run `wp checksum plugin duplicate-post`
+    When I run `wp plugin verify-checksums duplicate-post`
     Then STDOUT should be:
       """
       Success: Verified 1 of 1 plugins.
       """
     And STDERR should be empty
 
-    When I try `wp checksum plugin duplicate-post --strict`
+    When I try `wp plugin verify-checksums duplicate-post --strict`
     Then STDOUT should not be empty
     And STDERR should contain:
       """
@@ -90,7 +90,7 @@ Feature: Validate checksums for WordPress plugins
     Then STDOUT should not be empty
     And STDERR should be empty
 
-    When I run `wp checksum plugin wptouch`
+    When I run `wp plugin verify-checksums wptouch`
     Then STDOUT should be:
       """
       Success: Verified 1 of 1 plugins.
@@ -100,7 +100,7 @@ Feature: Validate checksums for WordPress plugins
   Scenario: Throws an error if provided with neither plugin names nor the --all flag
     Given a WP install
 
-    When I try `wp checksum plugin`
+    When I try `wp plugin verify-checksums`
     Then STDERR should contain:
       """
       You need to specify either one or more plugin slugs to check or use the --all flag to check all plugins.
@@ -134,7 +134,7 @@ Feature: Validate checksums for WordPress plugins
       duplicate-post
       """
 
-    When I try `wp checksum plugin --all --format=json`
+    When I try `wp plugin verify-checksums --all --format=json`
     Then STDOUT should contain:
       """
       "plugin_name":"duplicate-post","file":"duplicate-post.php","message":"Checksum does not match"
