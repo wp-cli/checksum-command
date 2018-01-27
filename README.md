@@ -11,12 +11,12 @@ Quick links: [Using](#using) | [Installing](#installing) | [Contributing](#contr
 
 This package implements the following commands:
 
-### wp checksum core
+### wp core verify-checksums
 
 Verifies WordPress files against WordPress.org's checksums.
 
 ~~~
-wp checksum core [--version=<version>] [--locale=<locale>]
+wp core verify-checksums [--version=<version>] [--locale=<locale>]
 ~~~
 
 Downloads md5 checksums for the current version from WordPress.org, and
@@ -60,12 +60,12 @@ site.
 
 
 
-### wp checksum plugin
+### wp plugin verify-checksums
 
 Verifies plugin files against WordPress.org's checksums.
 
 ~~~
-wp checksum plugin [<plugin>...] [--all] [--strict] [--format=<format>]
+wp plugin verify-checksums [<plugin>...] [--all] [--strict] [--format=<format>]
 ~~~
 
 **OPTIONS**
@@ -91,6 +91,16 @@ wp checksum plugin [<plugin>...] [--all] [--strict] [--format=<format>]
 		  - yaml
 		  - count
 		---
+
+**EXAMPLES**
+
+    # Verify the checksums of all installed plugins
+    $ wp plugin verify-checksums --all
+    Success: Verified 8 of 8 plugins.
+
+    # Verify the checksums of a single plugin, Akismet in this case
+    $ wp plugin verify-checksums akismet
+    Success: Verified 1 of 1 plugins.
 
 ## Installing
 

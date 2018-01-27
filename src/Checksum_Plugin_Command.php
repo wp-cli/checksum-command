@@ -58,6 +58,16 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 *   - yaml
 	 *   - count
 	 * ---
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     # Verify the checksums of all installed plugins
+	 *     $ wp plugin verify-checksums --all
+	 *     Success: Verified 8 of 8 plugins.
+	 *
+	 *     # Verify the checksums of a single plugin, Akismet in this case
+	 *     $ wp plugin verify-checksums akismet
+	 *     Success: Verified 1 of 1 plugins.
 	 */
 	public function __invoke( $args, $assoc_args ) {
 
@@ -137,7 +147,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	}
 
 	/**
-	 * Add a new error to the array of detected errors.
+	 * Adds a new error to the array of detected errors.
 	 *
 	 * @param string $plugin_name Name of the plugin that had the error.
 	 * @param string $file Relative path to the file that had the error.
@@ -151,7 +161,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	}
 
 	/**
-	 * Get the currently installed version for a given plugin.
+	 * Gets the currently installed version for a given plugin.
 	 *
 	 * @param string $path Relative path to plugin file to get the version for.
 	 *
@@ -215,7 +225,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	}
 
 	/**
-	 * Get the names of all installed plugins.
+	 * Gets the names of all installed plugins.
 	 *
 	 * @return array<string> Names of all installed plugins.
 	 */
@@ -229,7 +239,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	}
 
 	/**
-	 * Get the list of files that are part of the given plugin.
+	 * Gets the list of files that are part of the given plugin.
 	 *
 	 * @param string $path Relative path to the main plugin file.
 	 *
@@ -248,7 +258,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	}
 
 	/**
-	 * Check the integrity of a single plugin file by comparing it to the
+	 * Checks the integrity of a single plugin file by comparing it to the
 	 * officially provided checksum.
 	 *
 	 * @param string $path      Relative path to the plugin file to check the
@@ -275,7 +285,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	}
 
 	/**
-	 * Check whether the current environment supports 256-bit SHA-2.
+	 * Checks whether the current environment supports 256-bit SHA-2.
 	 *
 	 * Should be supported for PHP 5+, but we might find edge cases depending on
 	 * host.
@@ -287,7 +297,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	}
 
 	/**
-	 * Get the 256-bit SHA-2 of a given file.
+	 * Gets the 256-bit SHA-2 of a given file.
 	 *
 	 * @param string $filepath Absolute path to the file to calculate the SHA-2
 	 *                         for.
@@ -299,7 +309,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	}
 
 	/**
-	 * Get the MD5 of a given file.
+	 * Gets the MD5 of a given file.
 	 *
 	 * @param string $filepath Absolute path to the file to calculate the MD5
 	 *                         for.
@@ -311,7 +321,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	}
 
 	/**
-	 * Get the absolute path to a relative plugin file.
+	 * Gets the absolute path to a relative plugin file.
 	 *
 	 * @param string $path Relative path to get the absolute path for.
 	 *
@@ -322,7 +332,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	}
 
 	/**
-	 * Return a list of files that only trigger checksum errors in strict mode.
+	 * Returns a list of files that only trigger checksum errors in strict mode.
 	 *
 	 * @return array<string> Array of file names.
 	 */
@@ -335,7 +345,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	}
 
 	/**
-	 * Check whether a given file will only trigger checksum errors in strict
+	 * Checks whether a given file will only trigger checksum errors in strict
 	 * mode.
 	 *
 	 * @param string $file File to check.
