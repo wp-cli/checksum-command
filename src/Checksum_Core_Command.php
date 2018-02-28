@@ -140,7 +140,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	protected function filter_file( $filepath ) {
 		return ( 0 === strpos( $filepath, 'wp-admin/' )
 			|| 0 === strpos( $filepath, 'wp-includes/' )
-			|| 1 === preg_match( '/^wp-(?!config\.php)([^\/]*)$/', $filepath )
+			|| 1 === preg_match( '/^wp-(?!config\.php)([^\/\\\\]*)$/', $filepath )
 		);
 	}
 
