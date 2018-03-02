@@ -10,6 +10,17 @@ use \WP_CLI\Utils;
 class Checksum_Base_Command extends WP_CLI_Command {
 
 	/**
+	 * Normalizes directory separators to slashes.
+	 *
+	 * @param string $path Path to convert.
+	 *
+	 * @return string Path with all backslashes replaced by slashes.
+	 */
+	public static function normalize_directory_separators( $path ) {
+		return str_replace( '\\', '/', $path );
+	}
+
+	/**
 	 * Read a remote file and return its contents.
 	 *
 	 * @param string $url URL of the remote file to read.
@@ -42,7 +53,7 @@ class Checksum_Base_Command extends WP_CLI_Command {
 				RecursiveIteratorIterator::CHILD_FIRST
 			);
 			foreach ( $files as $file_info ) {
-				$pathname = substr( $file_info->getPathname(), strlen( $path ) );
+				$pathname = self::normalize_directory_separators( substr( $file_info->getPathname(), strlen( $path ) ) );
 				if ( $file_info->isFile() && $this->filter_file( $pathname ) ) {
 					$filtered_files[] = $pathname;
 				}
