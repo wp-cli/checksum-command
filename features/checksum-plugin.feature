@@ -81,6 +81,22 @@ Feature: Validate checksums for WordPress plugins
       Error: No plugins verified (1 failed).
       """
 
+    Given "Duplicate Post" replaced with "Different Name" in the wp-content/plugins/duplicate-post/README.MD file
+
+    When I run `wp plugin verify-checksums duplicate-post`
+    Then STDOUT should be:
+      """
+      Success: Verified 1 of 1 plugins.
+      """
+    And STDERR should be empty
+
+    When I try `wp plugin verify-checksums duplicate-post --strict`
+    Then STDOUT should not be empty
+    And STDERR should contain:
+      """
+      Error: No plugins verified (1 failed).
+      """
+
   # WPTouch 4.3.22 contains multiple checksums for some of its files.
   # See https://github.com/wp-cli/checksum-command/issues/24
   Scenario: Multiple checksums for a single file are supported
