@@ -339,6 +339,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	private function get_soft_change_files() {
 		static $files = array(
 			'readme.txt',
+			'readme.md',
 		);
 
 		return $files;
@@ -354,6 +355,6 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 * mode.
 	 */
 	private function is_soft_change_file( $file ) {
-		return in_array( $file, $this->get_soft_change_files(), true );
+		return in_array( strtolower( $file ), $this->get_soft_change_files(), true );
 	}
 }
