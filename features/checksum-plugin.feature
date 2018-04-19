@@ -61,20 +61,40 @@ Feature: Validate checksums for WordPress plugins
   Scenario: Soft changes are only reported in strict mode
     Given a WP install
 
-    When I run `wp plugin install duplicate-post --version=3.2.1`
+    When I run `wp plugin install release-notes --version=0.1`
     Then STDOUT should not be empty
     And STDERR should be empty
 
-    Given "Duplicate Post" replaced with "Different Name" in the wp-content/plugins/duplicate-post/readme.txt file
+    Given "Release Notes" replaced with "Different Name" in the wp-content/plugins/release-notes/readme.txt file
 
-    When I run `wp plugin verify-checksums duplicate-post`
+    When I run `wp plugin verify-checksums release-notes`
     Then STDOUT should be:
       """
       Success: Verified 1 of 1 plugins.
       """
     And STDERR should be empty
 
-    When I try `wp plugin verify-checksums duplicate-post --strict`
+    When I try `wp plugin verify-checksums release-notes --strict`
+    Then STDOUT should not be empty
+    And STDERR should contain:
+      """
+      Error: No plugins verified (1 failed).
+      """
+
+    When I run `wp plugin install release-notes --version=0.1`
+    Then STDOUT should not be empty
+    And STDERR should be empty
+
+    Given "Release Notes" replaced with "Different Name" in the wp-content/plugins/release-notes/README.md file
+
+    When I run `wp plugin verify-checksums release-notes`
+    Then STDOUT should be:
+      """
+      Success: Verified 1 of 1 plugins.
+      """
+    And STDERR should be empty
+
+    When I try `wp plugin verify-checksums release-notes --strict`
     Then STDOUT should not be empty
     And STDERR should contain:
       """
