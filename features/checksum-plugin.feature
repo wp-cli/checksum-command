@@ -81,10 +81,6 @@ Feature: Validate checksums for WordPress plugins
       Error: No plugins verified (1 failed).
       """
 
-    When I run `wp plugin install release-notes --version=0.1`
-    Then STDOUT should not be empty
-    And STDERR should be empty
-
     Given "Release Notes" replaced with "Different Name" in the wp-content/plugins/release-notes/README.md file
 
     When I run `wp plugin verify-checksums release-notes`
