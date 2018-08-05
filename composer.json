@@ -1,11 +1,8 @@
 {
     "name": "wp-cli/checksum-command",
-    "description": "Verifies file integrity by comparing to published checksums.",
     "type": "wp-cli-package",
+    "description": "Verifies file integrity by comparing to published checksums.",
     "homepage": "https://github.com/wp-cli/checksum-command",
-    "support": {
-        "issues": "https://github.com/wp-cli/checksum-command/issues"
-    },
     "license": "MIT",
     "authors": [
         {
@@ -14,18 +11,16 @@
             "homepage": "https://runcommand.io"
         }
     ],
-    "minimum-stability": "dev",
-    "prefer-stable": true,
-    "autoload": {
-        "psr-4": {
-            "": "src/"
-        },
-        "files": [ "checksum-command.php" ]
+    "require": {
+        "wp-cli/wp-cli": "^2"
     },
-    "require": {},
     "require-dev": {
-        "behat/behat": "~2.5",
-        "wp-cli/wp-cli": "^1.5"
+        "wp-cli/extension-command": "^1.2",
+        "wp-cli/wp-cli-tests": "^0"
+    },
+    "config": {
+        "sort-packages": true,
+        "process-timeout": 7200
     },
     "extra": {
         "branch-alias": {
@@ -36,5 +31,31 @@
             "core verify-checksums",
             "plugin verify-checksums"
         ]
+    },
+    "autoload": {
+        "psr-4": {
+            "": "src/"
+        },
+        "files": [
+            "checksum-command.php"
+        ]
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "behat": "run-behat-tests",
+        "lint": "run-linter-tests",
+        "phpcs": "run-phpcs-tests",
+        "phpunit": "run-php-unit-tests",
+        "prepare-tests": "install-package-tests",
+        "test": [
+            "@lint",
+            "@phpcs",
+            "@phpunit",
+            "@behat"
+        ]
+    },
+    "support": {
+        "issues": "https://github.com/wp-cli/checksum-command/issues"
     }
 }
