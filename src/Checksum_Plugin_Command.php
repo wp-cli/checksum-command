@@ -269,7 +269,8 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 */
 	private function check_file_checksum( $path, $checksums ) {
 		if ( $this->supports_sha256()
-			&& array_key_exists( 'sha256', $checksums ) ) {
+			&& array_key_exists( 'sha256', $checksums )
+		) {
 			$sha256 = $this->get_sha256( $this->get_absolute_path( $path ) );
 
 			return in_array( $sha256, (array) $checksums['sha256'], true );
