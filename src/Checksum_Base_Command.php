@@ -1,6 +1,6 @@
 <?php
 
-use \WP_CLI\Utils;
+use WP_CLI\Utils;
 
 /**
  * Base command that all checksum commands rely on.

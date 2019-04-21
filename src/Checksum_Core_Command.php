@@ -1,6 +1,6 @@
 <?php
 
-use \WP_CLI\Utils;
+use WP_CLI\Utils;
 
 /**
  * Verifies core file integrity by comparing to published checksums.
@@ -208,7 +208,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 		$headers  = [ 'Accept' => 'application/json' ];
 		$response = Utils\http_request( 'GET', $url, null, $headers, $options );
 
-		if ( ! $response->success || 200 !== intval( $response->status_code ) ) {
+		if ( ! $response->success || 200 !== (int) $response->status_code ) {
 			return false;
 		}
 
