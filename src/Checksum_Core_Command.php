@@ -9,22 +9,6 @@ use \WP_CLI\Utils;
  */
 class Checksum_Core_Command extends Checksum_Base_Command {
 
-	private function get_download_offer( $locale ) {
-		$out = unserialize( //phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize -- WordPress itself uses these functions for the data being adjusted.
-			self::_read(
-				'https://api.wordpress.org/core/version-check/1.6/?locale=' . $locale
-			)
-		);
-
-		$offer = $out['offers'][0];
-
-		if ( $offer['locale'] !== $locale ) {
-			return false;
-		}
-
-		return $offer;
-	}
-
 	/**
 	 * Verifies WordPress files against WordPress.org's checksums.
 	 *
