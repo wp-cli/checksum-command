@@ -10,12 +10,15 @@ use \WP_CLI\Utils;
 class Checksum_Core_Command extends Checksum_Base_Command {
 
 	private function get_download_offer( $locale ) {
-		$out = unserialize( self::_read(
-			'https://api.wordpress.org/core/version-check/1.6/?locale=' . $locale ) );
+		$out = unserialize( //phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize -- WordPress itself uses these functions for the data being adjusted.
+			self::_read(
+				'https://api.wordpress.org/core/version-check/1.6/?locale=' . $locale
+			)
+		);
 
 		$offer = $out['offers'][0];
 
-		if ( $offer['locale'] != $locale ) {
+		if ( $offer['locale'] !== $locale ) {
 			return false;
 		}
 
@@ -30,9 +33,9 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 *
 	 * For security, avoids loading WordPress when verifying checksums.
 	 *
-	 * If you experience issues verifying from this command, ensure you are 
-	 * passing the relevant `--locale` and `--version` arguments according to 
-	 * the values from the `Dashboard->Updates` menu in the admin area of the 
+	 * If you experience issues verifying from this command, ensure you are
+	 * passing the relevant `--locale` and `--version` arguments according to
+	 * the values from the `Dashboard->Updates` menu in the admin area of the
 	 * site.
 	 *
 	 * ## OPTIONS
@@ -67,7 +70,8 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 * @when before_wp_load
 	 */
 	public function __invoke( $args, $assoc_args ) {
-		global $wp_version, $wp_local_package;
+		$wp_version       = '';
+		$wp_local_package = '';
 
 		if ( ! empty( $assoc_args['version'] ) ) {
 			$wp_version = $assoc_args['version'];
@@ -78,7 +82,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 		}
 
 		if ( empty( $wp_version ) ) {
-			$details = self::get_wp_details();
+			$details    = self::get_wp_details();
 			$wp_version = $details['wp_version'];
 
 			if ( empty( $wp_local_package ) ) {
@@ -86,8 +90,10 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 			}
 		}
 
-		$checksums = self::get_core_checksums( $wp_version,
-			! empty( $wp_local_package ) ? $wp_local_package : 'en_US' );
+		$checksums = self::get_core_checksums(
+			$wp_version,
+			! empty( $wp_local_package ) ? $wp_local_package : 'en_US'
+		);
 
 		if ( ! is_array( $checksums ) ) {
 			WP_CLI::error( "Couldn't get checksums from WordPress.org." );
@@ -96,7 +102,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 		$has_errors = false;
 		foreach ( $checksums as $file => $checksum ) {
 			// Skip files which get updated
-			if ( 'wp-content' == substr( $file, 0, 10 ) ) {
+			if ( 'wp-content' === substr( $file, 0, 10 ) ) {
 				continue;
 			}
 
@@ -113,7 +119,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 			}
 		}
 
-		$core_checksums_files = array_filter( array_keys( $checksums ), array( $this, 'filter_file' ) );
+		$core_checksums_files = array_filter( array_keys( $checksums ), [ $this, 'filter_file' ] );
 		$core_files           = $this->get_files( ABSPATH );
 		$additional_files     = array_diff( $core_files, $core_checksums_files );
 
@@ -124,7 +130,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 		}
 
 		if ( ! $has_errors ) {
-			WP_CLI::success( "WordPress installation verifies against checksums." );
+			WP_CLI::success( 'WordPress installation verifies against checksums.' );
 		} else {
 			WP_CLI::error( "WordPress installation doesn't verify against checksums." );
 		}
@@ -160,13 +166,14 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 		if ( ! is_readable( $versions_path ) ) {
 			WP_CLI::error(
 				"This does not seem to be a WordPress install.\n" .
-				"Pass --path=`path/to/wordpress` or run `wp core download`." );
+				'Pass --path=`path/to/wordpress` or run `wp core download`.'
+			);
 		}
 
 		$version_content = file_get_contents( $versions_path, null, null, 6, 2048 );
 
-		$vars   = array( 'wp_version', 'wp_db_version', 'tinymce_version', 'wp_local_package' );
-		$result = array();
+		$vars   = [ 'wp_version', 'wp_db_version', 'tinymce_version', 'wp_local_package' ];
+		$result = [];
 
 		foreach ( $vars as $var_name ) {
 			$result[ $var_name ] = self::find_var( $var_name, $version_content );
@@ -195,15 +202,11 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 		}
 
 		$start = $start + strlen( $var_name ) + 3;
-		$end   = strpos( $code, ";", $start );
+		$end   = strpos( $code, ';', $start );
 
 		$value = substr( $code, $start, $end - $start );
 
-		if ( $value[0] = "'" ) {
-			return trim( $value, "'" );
-		} else {
-			return intval( $value );
-		}
+		return trim( $value, "'" );
 	}
 
 	/**
@@ -216,23 +219,21 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	private static function get_core_checksums( $version, $locale ) {
 		$url = 'https://api.wordpress.org/core/checksums/1.0/?' . http_build_query( compact( 'version', 'locale' ), null, '&' );
 
-		$options = array(
-			'timeout' => 30
-		);
+		$options = [ 'timeout' => 30 ];
 
-		$headers = array(
-			'Accept' => 'application/json'
-		);
+		$headers  = [ 'Accept' => 'application/json' ];
 		$response = Utils\http_request( 'GET', $url, null, $headers, $options );
 
-		if ( ! $response->success || 200 != $response->status_code )
+		if ( ! $response->success || 200 !== intval( $response->status_code ) ) {
 			return false;
+		}
 
 		$body = trim( $response->body );
 		$body = json_decode( $body, true );
 
-		if ( ! is_array( $body ) || ! isset( $body['checksums'] ) || ! is_array( $body['checksums'] ) )
+		if ( ! is_array( $body ) || ! isset( $body['checksums'] ) || ! is_array( $body['checksums'] ) ) {
 			return false;
+		}
 
 		return $body['checksums'];
 	}
