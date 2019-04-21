@@ -51,4 +51,14 @@
 		</properties>
 	</rule>
 
+	<!-- Exclude existing classes from the prefix rule as it would break BC to prefix them now. -->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedClassFound">
+		<exclude-pattern>*/src/(Plugin_|Core_)?Command_Namespace\.php$</exclude-pattern>
+		<exclude-pattern>*/src/Checksum_(Plugin|Core|Base)_Command\.php$</exclude-pattern>
+	</rule>
+
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound">
+		<exclude-pattern>*/src/WP_CLI/Fetchers/UnfilteredPlugin\.php$</exclude-pattern>
+	</rule>
+
 </ruleset>
