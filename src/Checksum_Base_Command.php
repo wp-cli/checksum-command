@@ -1,6 +1,6 @@
 <?php
 
-use \WP_CLI\Utils;
+use WP_CLI\Utils;
 
 /**
  * Base command that all checksum commands rely on.
@@ -27,10 +27,15 @@ class Checksum_Base_Command extends WP_CLI_Command {
 	 *
 	 * @return mixed
 	 */
-	protected static function _read( $url ) {
+	protected static function _read( $url ) { // phpcs:ignore PSR2.Methods.MethodDeclaration.Underscore -- Could be used in classes extending this class.
 		$headers  = array( 'Accept' => 'application/json' );
-		$response = Utils\http_request( 'GET', $url, null, $headers,
-			array( 'timeout' => 30 ) );
+		$response = Utils\http_request(
+			'GET',
+			$url,
+			null,
+			$headers,
+			array( 'timeout' => 30 )
+		);
 		if ( 200 === $response->status_code ) {
 			return $response->body;
 		}
@@ -48,8 +53,10 @@ class Checksum_Base_Command extends WP_CLI_Command {
 		$filtered_files = array();
 		try {
 			$files = new RecursiveIteratorIterator(
-				new RecursiveDirectoryIterator( $path,
-					RecursiveDirectoryIterator::SKIP_DOTS ),
+				new RecursiveDirectoryIterator(
+					$path,
+					RecursiveDirectoryIterator::SKIP_DOTS
+				),
 				RecursiveIteratorIterator::CHILD_FIRST
 			);
 			foreach ( $files as $file_info ) {
