@@ -201,7 +201,8 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 * @return bool|array False on failure. An array of checksums on success.
 	 */
 	private static function get_core_checksums( $version, $locale ) {
-		$url = 'https://api.wordpress.org/core/checksums/1.0/?' . http_build_query( compact( 'version', 'locale' ), null, '&' );
+		$query = http_build_query( compact( 'version', 'locale' ), null, '&' );
+		$url = "https://api.wordpress.org/core/checksums/1.0/?{$query}";
 
 		$options = [ 'timeout' => 30 ];
 
