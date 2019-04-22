@@ -202,7 +202,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 */
 	private static function get_core_checksums( $version, $locale ) {
 		$query = http_build_query( compact( 'version', 'locale' ), null, '&' );
-		$url = "https://api.wordpress.org/core/checksums/1.0/?{$query}";
+		$url   = "https://api.wordpress.org/core/checksums/1.0/?{$query}";
 
 		$options = [ 'timeout' => 30 ];
 
