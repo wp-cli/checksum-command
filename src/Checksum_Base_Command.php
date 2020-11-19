@@ -53,9 +53,13 @@ class Checksum_Base_Command extends WP_CLI_Command {
 		$filtered_files = array();
 		try {
 			$files = new RecursiveIteratorIterator(
-				new RecursiveDirectoryIterator(
-					$path,
-					RecursiveDirectoryIterator::SKIP_DOTS
+				new RecursiveCallbackFilterIterator(
+					new RecursiveDirectoryIterator(
+						$path,
+						RecursiveDirectoryIterator::SKIP_DOTS
+					), function($current, $key, $iterator) use($path) {
+						return $this->filter_file( self::normalize_directory_separators( substr( $current->getPathname(), strlen( $path ) ) ) );
+					}
 				),
 				RecursiveIteratorIterator::CHILD_FIRST
 			);
