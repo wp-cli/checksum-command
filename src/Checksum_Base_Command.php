@@ -65,9 +65,8 @@ class Checksum_Base_Command extends WP_CLI_Command {
 				RecursiveIteratorIterator::CHILD_FIRST
 			);
 			foreach ( $files as $file_info ) {
-				$pathname = self::normalize_directory_separators( substr( $file_info->getPathname(), strlen( $path ) ) );
-				if ( $file_info->isFile() && $this->filter_file( $pathname ) ) {
-					$filtered_files[] = $pathname;
+				if ( $file_info->isFile() ) {
+					$filtered_files[] = self::normalize_directory_separators( substr( $file_info->getPathname(), strlen( $path ) ) );
 				}
 			}
 		} catch ( Exception $e ) {
