@@ -3,7 +3,7 @@ wp-cli/checksum-command
 
 Verifies file integrity by comparing to published checksums.
 
-[![Build Status](https://travis-ci.org/wp-cli/checksum-command.svg?branch=master)](https://travis-ci.org/wp-cli/checksum-command)
+
 
 Quick links: [Using](#using) | [Installing](#installing) | [Contributing](#contributing) | [Support](#support)
 
