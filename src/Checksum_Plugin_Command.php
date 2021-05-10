@@ -101,7 +101,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			try {
 				$checksums = $wp_org_api->get_plugin_checksums( $plugin->name, $version );
 			} catch ( Exception $exception ) {
-				WP_CLI::error( $exception );
+				$checksums = false;
 			}
 
 			if ( false === $checksums ) {
