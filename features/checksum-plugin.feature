@@ -130,7 +130,7 @@ Feature: Validate checksums for WordPress plugins
       duplicate-post
       wptouch
       """
-    And a wp-content/mu-plugins/hide-qm-plugin.php file:
+    And a wp-content/mu-plugins/hide-dp-plugin.php file:
       """
       <?php
       /**

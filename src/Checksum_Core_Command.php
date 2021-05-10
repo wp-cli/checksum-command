@@ -1,6 +1,7 @@
 <?php
 
 use WP_CLI\Utils;
+use WP_CLI\WpOrgApi;
 
 /**
  * Verifies core file integrity by comparing to published checksums.
@@ -30,6 +31,9 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 * [--locale=<locale>]
 	 * : Verify checksums against a specific locale of WordPress.
 	 *
+	 * [--insecure]
+	 * : Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Verify checksums
@@ -54,30 +58,34 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 * @when before_wp_load
 	 */
 	public function __invoke( $args, $assoc_args ) {
-		$wp_version       = '';
-		$wp_local_package = '';
+		$wp_version = '';
+		$locale     = '';
 
 		if ( ! empty( $assoc_args['version'] ) ) {
 			$wp_version = $assoc_args['version'];
 		}
 
 		if ( ! empty( $assoc_args['locale'] ) ) {
-			$wp_local_package = $assoc_args['locale'];
+			$locale = $assoc_args['locale'];
 		}
 
 		if ( empty( $wp_version ) ) {
 			$details    = self::get_wp_details();
 			$wp_version = $details['wp_version'];
 
-			if ( empty( $wp_local_package ) ) {
-				$wp_local_package = $details['wp_local_package'];
+			if ( empty( $locale ) ) {
+				$locale = $details['wp_local_package'];
 			}
 		}
 
-		$checksums = self::get_core_checksums(
-			$wp_version,
-			! empty( $wp_local_package ) ? $wp_local_package : 'en_US'
-		);
+		$insecure   = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$wp_org_api = new WpOrgApi( [ 'insecure' => $insecure ] );
+
+		try {
+			$checksums = $wp_org_api->get_core_checksums( $wp_version, empty( $locale ) ? 'en_US' : $locale );
+		} catch ( Exception $exception ) {
+			WP_CLI::error( $exception );
+		}
 
 		if ( ! is_array( $checksums ) ) {
 			WP_CLI::error( "Couldn't get checksums from WordPress.org." );
@@ -192,35 +200,4 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 
 		return trim( $value, "'" );
 	}
-
-	/**
-	 * Security copy of the core function with Requests - Gets the checksums for the given version of WordPress.
-	 *
-	 * @param string $version Version string to query.
-	 * @param string $locale  Locale to query.
-	 * @return bool|array False on failure. An array of checksums on success.
-	 */
-	private static function get_core_checksums( $version, $locale ) {
-		$query = http_build_query( compact( 'version', 'locale' ), null, '&' );
-		$url   = "https://api.wordpress.org/core/checksums/1.0/?{$query}";
-
-		$options = [ 'timeout' => 30 ];
-
-		$headers  = [ 'Accept' => 'application/json' ];
-		$response = Utils\http_request( 'GET', $url, null, $headers, $options );
-
-		if ( ! $response->success || 200 !== (int) $response->status_code ) {
-			return false;
-		}
-
-		$body = trim( $response->body );
-		$body = json_decode( $body, true );
-
-		if ( ! is_array( $body ) || ! isset( $body['checksums'] ) || ! is_array( $body['checksums'] ) ) {
-			return false;
-		}
-
-		return $body['checksums'];
-	}
-
 }
