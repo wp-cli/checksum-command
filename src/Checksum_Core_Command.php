@@ -59,7 +59,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 */
 	public function __invoke( $args, $assoc_args ) {
 		$wp_version = '';
-		$locale     = 'en_US';
+		$locale     = '';
 
 		if ( ! empty( $assoc_args['version'] ) ) {
 			$wp_version = $assoc_args['version'];
@@ -82,7 +82,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 		$wp_org_api = new WpOrgApi( [ 'insecure' => $insecure ] );
 
 		try {
-			$checksums = $wp_org_api->get_core_checksums( $wp_version, $locale );
+			$checksums = $wp_org_api->get_core_checksums( $wp_version, empty( $locale ) ? 'en_US' : $locale );
 		} catch ( Exception $exception ) {
 			WP_CLI::error( $exception );
 		}
