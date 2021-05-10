@@ -3,6 +3,7 @@
 use WP_CLI\Fetchers;
 use WP_CLI\Formatter;
 use WP_CLI\Utils;
+use WP_CLI\WpOrgApi;
 
 /**
  * Verifies plugin file integrity by comparing to published checksums.
@@ -59,6 +60,9 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 *   - count
 	 * ---
 	 *
+	 * [--insecure]
+	 * : Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Verify the checksums of all installed plugins
@@ -71,10 +75,11 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 */
 	public function __invoke( $args, $assoc_args ) {
 
-		$fetcher = new Fetchers\UnfilteredPlugin();
-		$all     = Utils\get_flag_value( $assoc_args, 'all', false );
-		$strict  = Utils\get_flag_value( $assoc_args, 'strict', false );
-		$plugins = $fetcher->get_many( $all ? $this->get_all_plugin_names() : $args );
+		$fetcher  = new Fetchers\UnfilteredPlugin();
+		$all      = (bool) Utils\get_flag_value( $assoc_args, 'all', false );
+		$strict   = (bool) Utils\get_flag_value( $assoc_args, 'strict', false );
+		$insecure = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$plugins  = $fetcher->get_many( $all ? $this->get_all_plugin_names() : $args );
 
 		if ( empty( $plugins ) && ! $all ) {
 			WP_CLI::error( 'You need to specify either one or more plugin slugs to check or use the --all flag to check all plugins.' );
@@ -91,7 +96,13 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 				continue;
 			}
 
-			$checksums = $this->get_plugin_checksums( $plugin->name, $version );
+			$wp_org_api = new WpOrgApi( [ 'insecure' => $insecure ] );
+
+			try {
+				$checksums = $wp_org_api->get_plugin_checksums( $plugin->name, $version );
+			} catch ( Exception $exception ) {
+				WP_CLI::error( $exception );
+			}
 
 			if ( false === $checksums ) {
 				WP_CLI::warning( "Could not retrieve the checksums for version {$version} of plugin {$plugin->name}, skipping." );
@@ -178,50 +189,6 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		}
 
 		return $this->plugins_data[ $path ]['Version'];
-	}
-
-	/**
-	 * Gets the checksums for the given version of plugin.
-	 *
-	 * @param string $version Version string to query.
-	 * @param string $plugin  plugin string to query.
-	 *
-	 * @return bool|array False on failure. An array of checksums on success.
-	 */
-	private function get_plugin_checksums( $plugin, $version ) {
-		$url = str_replace(
-			array(
-				'{slug}',
-				'{version}',
-			),
-			array(
-				$plugin,
-				$version,
-			),
-			$this->url_template
-		);
-
-		$options = array(
-			'timeout' => 30,
-		);
-
-		$headers  = array(
-			'Accept' => 'application/json',
-		);
-		$response = Utils\http_request( 'GET', $url, null, $headers, $options );
-
-		if ( ! $response->success || 200 !== $response->status_code ) {
-			return false;
-		}
-
-		$body = trim( $response->body );
-		$body = json_decode( $body, true );
-
-		if ( ! is_array( $body ) || ! isset( $body['files'] ) || ! is_array( $body['files'] ) ) {
-			return false;
-		}
-
-		return $body['files'];
 	}
 
 	/**
