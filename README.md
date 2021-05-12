@@ -16,7 +16,7 @@ This package implements the following commands:
 Verifies WordPress files against WordPress.org's checksums.
 
 ~~~
-wp core verify-checksums [--version=<version>] [--locale=<locale>]
+wp core verify-checksums [--version=<version>] [--locale=<locale>] [--insecure]
 ~~~
 
 Downloads md5 checksums for the current version from WordPress.org, and
@@ -36,6 +36,9 @@ site.
 
 	[--locale=<locale>]
 		Verify checksums against a specific locale of WordPress.
+
+	[--insecure]
+		Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 
 **EXAMPLES**
 
@@ -65,7 +68,7 @@ site.
 Verifies plugin files against WordPress.org's checksums.
 
 ~~~
-wp plugin verify-checksums [<plugin>...] [--all] [--strict] [--format=<format>]
+wp plugin verify-checksums [<plugin>...] [--all] [--strict] [--format=<format>] [--insecure]
 ~~~
 
 **OPTIONS**
@@ -91,6 +94,9 @@ wp plugin verify-checksums [<plugin>...] [--all] [--strict] [--format=<format>]
 		  - yaml
 		  - count
 		---
+
+	[--insecure]
+		Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 
 **EXAMPLES**
 
