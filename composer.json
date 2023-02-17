@@ -36,9 +36,9 @@
         ]
     },
     "autoload": {
-        "psr-4": {
-            "": "src/"
-        },
+        "classmap": [
+            "src/"
+        ],
         "files": [
             "checksum-command.php"
         ]
