@@ -25,6 +25,9 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 *
 	 * ## OPTIONS
 	 *
+	 * [--include-root]
+	 * : Verify all files in the root directory.
+	 *
 	 * [--version=<version>]
 	 * : Verify checksums against a specific version of WordPress.
 	 *
@@ -58,8 +61,9 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 * @when before_wp_load
 	 */
 	public function __invoke( $args, $assoc_args ) {
-		$wp_version = '';
-		$locale     = '';
+		$wp_version   = '';
+		$locale       = '';
+		$this->include_root = false;
 
 		if ( ! empty( $assoc_args['version'] ) ) {
 			$wp_version = $assoc_args['version'];
@@ -67,6 +71,10 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 
 		if ( ! empty( $assoc_args['locale'] ) ) {
 			$locale = $assoc_args['locale'];
+		}
+
+		if ( ! empty( $assoc_args['include-root'] ) ) {
+			$this->include_root = true;
 		}
 
 		if ( empty( $wp_version ) ) {
@@ -135,7 +143,11 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 *
 	 * @return bool
 	 */
-	protected function filter_file( $filepath ) {
+	protected function filter_file( $filepath, $include_root = false ) {
+		if ( true === $this->include_root ) {
+			return true;
+		}
+
 		return ( 0 === strpos( $filepath, 'wp-admin/' )
 			|| 0 === strpos( $filepath, 'wp-includes/' )
 			|| 1 === preg_match( '/^wp-(?!config\.php)([^\/]*)$/', $filepath )
