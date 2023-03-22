@@ -61,8 +61,8 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 * @when before_wp_load
 	 */
 	public function __invoke( $args, $assoc_args ) {
-		$wp_version   = '';
-		$locale       = '';
+		$wp_version         = '';
+		$locale             = '';
 		$this->include_root = false;
 
 		if ( ! empty( $assoc_args['version'] ) ) {
