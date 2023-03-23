@@ -27,7 +27,7 @@ Feature: Validate checksums for WordPress install
     When I run `rm readme.html`
     Then STDERR should be empty
 
-    When I try `wp core verify-checksums`
+    When I run `wp core verify-checksums`
     Then STDOUT should be:
       """
       Success: WordPress installation verifies against checksums.
