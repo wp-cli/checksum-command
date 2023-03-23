@@ -26,7 +26,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 * ## OPTIONS
 	 *
 	 * [--include-root]
-	 * : Verify all files in the root directory.
+	 * : Verify all files in the root directory, and warn if any non-WordPress files are found.
 	 *
 	 * [--version=<version>]
 	 * : Verify checksums against a specific version of WordPress.
