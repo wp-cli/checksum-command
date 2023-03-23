@@ -145,7 +145,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 */
 	protected function filter_file( $filepath, $include_root = false ) {
 		if ( true === $this->include_root ) {
-			return ( 1 !== preg_match( '/^(wp-config\.php|wp-content\/plugins)$/', $filepath ) );
+			return ( 1 !== preg_match( '/^(wp-config\.php$|wp-content\/)/', $filepath ) );
 		}
 
 		return ( 0 === strpos( $filepath, 'wp-admin/' )
