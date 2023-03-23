@@ -11,6 +11,13 @@ use WP_CLI\WpOrgApi;
 class Checksum_Core_Command extends Checksum_Base_Command {
 
 	/**
+	 * Whether or not to verify contents of the root directory.
+	 *
+	 * @var boolean
+	 */
+	private $include_root = false;
+
+	/**
 	 * Verifies WordPress files against WordPress.org's checksums.
 	 *
 	 * Downloads md5 checksums for the current version from WordPress.org, and
@@ -61,9 +68,8 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 * @when before_wp_load
 	 */
 	public function __invoke( $args, $assoc_args ) {
-		$wp_version         = '';
-		$locale             = '';
-		$this->include_root = false;
+		$wp_version = '';
+		$locale     = '';
 
 		if ( ! empty( $assoc_args['version'] ) ) {
 			$wp_version = $assoc_args['version'];
