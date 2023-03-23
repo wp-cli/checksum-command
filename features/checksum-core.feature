@@ -28,6 +28,30 @@ Feature: Validate checksums for WordPress install
     Then STDERR should be empty
 
     When I try `wp core verify-checksums`
+    Then STDOUT should be:
+      """
+      Success: WordPress installation verifies against checksums.
+      """
+
+  Scenario: Core checksums don't verify because wp-cli.yml is present
+    Given a WP install
+    And a wp-cli.yml file is present
+
+    When I try `wp core verify-checksums`
+    Then STDERR should be:
+      """
+      Warning: File should not exist: wp-includes/extra-file.txt
+      """
+    And STDOUT should be:
+      """
+      Success: WordPress installation verifies against checksums.
+      """
+    And the return code should be 0
+
+    When I run `rm wp-cli.yml`
+    Then STDERR should be empty
+
+    When I try `wp core verify-checksums`
     Then STDERR should be:
       """
       Warning: File doesn't exist: readme.html
