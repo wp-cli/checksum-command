@@ -16,7 +16,7 @@ This package implements the following commands:
 Verifies WordPress files against WordPress.org's checksums.
 
 ~~~
-wp core verify-checksums [--version=<version>] [--locale=<locale>] [--insecure]
+wp core verify-checksums [--include-root] [--version=<version>] [--locale=<locale>] [--insecure]
 ~~~
 
 Downloads md5 checksums for the current version from WordPress.org, and
@@ -30,6 +30,9 @@ the values from the `Dashboard->Updates` menu in the admin area of the
 site.
 
 **OPTIONS**
+
+	[--include-root]
+		Verify all files and folders in the root directory, and warn if any non-WordPress items are found.
 
 	[--version=<version>]
 		Verify checksums against a specific version of WordPress.
