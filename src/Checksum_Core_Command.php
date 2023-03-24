@@ -162,7 +162,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 			);
 		}
 
-		$version_content = file_get_contents( $versions_path, null, null, 6, 2048 );
+		$version_content = file_get_contents( $versions_path, false, null, 6, 2048 );
 
 		$vars   = [ 'wp_version', 'wp_db_version', 'tinymce_version', 'wp_local_package' ];
 		$result = [];
