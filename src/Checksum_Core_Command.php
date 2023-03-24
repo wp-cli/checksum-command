@@ -149,7 +149,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 *
 	 * @return bool
 	 */
-	protected function filter_file( $filepath, $include_root = false ) {
+	protected function filter_file( $filepath ) {
 		if ( true === $this->include_root ) {
 			return ( 1 !== preg_match( '/^(wp-config\.php$|wp-content\/)/', $filepath ) );
 		}
