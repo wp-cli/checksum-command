@@ -138,7 +138,6 @@ Feature: Validate checksums for WordPress install
       """
     And the return code should be 0
 
-  @daniel
   Scenario: Verify core checksums when extra files are included in WordPress root and --include-root is passed
     Given a WP install
     And a extra-file.php file:
