@@ -144,10 +144,36 @@ Feature: Validate checksums for WordPress install
       """
       hello world
       """
+    And a unknown-folder/unknown-file.php file:
+      """
+      taco burrito
+      """
+    And a wp-content/unknown-file.php file:
+      """
+      foobar
+      """
 
     When I try `wp core verify-checksums --include-root`
     Then STDERR should be:
       """
+      Warning: File should not exist: unknown-folder/unknown-file.php
+      Warning: File should not exist: extra-file.php
+      """
+    And STDERR should not contain:
+      """
+      Warning: File should not exist: wp-content/unknown-file.php
+      """
+    And STDOUT should be:
+      """
+      Success: WordPress installation verifies against checksums.
+      """
+    And the return code should be 0
+
+    When I run `wp core verify-checksums`
+    Then STDERR should not contain:
+      """
+      Warning: File should not exist: wp-content/unknown-file.php
+      Warning: File should not exist: unknown-folder/unknown-file.php
       Warning: File should not exist: extra-file.php
       """
     And STDOUT should be:
