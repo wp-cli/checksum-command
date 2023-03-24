@@ -159,9 +159,12 @@ Feature: Validate checksums for WordPress install
       """
 
     When I try `wp core verify-checksums --include-root`
-    Then STDERR should be:
+    Then STDERR should contain:
       """
       Warning: File should not exist: unknown-folder/unknown-file.php
+      """
+    And STDERR should contain:
+      """
       Warning: File should not exist: extra-file.php
       """
     And STDERR should not contain:
@@ -177,9 +180,15 @@ Feature: Validate checksums for WordPress install
     When I run `wp core verify-checksums`
     Then STDERR should not contain:
       """
-      Warning: File should not exist: wp-content/unknown-file.php
       Warning: File should not exist: unknown-folder/unknown-file.php
+      """
+    And STDERR should not contain:
+      """
       Warning: File should not exist: extra-file.php
+      """
+    And STDERR should not contain:
+      """
+      Warning: File should not exist: wp-content/unknown-file.php
       """
     And STDOUT should be:
       """
