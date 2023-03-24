@@ -11,6 +11,13 @@ use WP_CLI\WpOrgApi;
 class Checksum_Core_Command extends Checksum_Base_Command {
 
 	/**
+	 * Whether or not to verify contents of the root directory.
+	 *
+	 * @var boolean
+	 */
+	private $include_root = false;
+
+	/**
 	 * Verifies WordPress files against WordPress.org's checksums.
 	 *
 	 * Downloads md5 checksums for the current version from WordPress.org, and
@@ -24,6 +31,9 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 * site.
 	 *
 	 * ## OPTIONS
+	 *
+	 * [--include-root]
+	 * : Verify all files and folders in the root directory, and warn if any non-WordPress items are found.
 	 *
 	 * [--version=<version>]
 	 * : Verify checksums against a specific version of WordPress.
@@ -67,6 +77,10 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 
 		if ( ! empty( $assoc_args['locale'] ) ) {
 			$locale = $assoc_args['locale'];
+		}
+
+		if ( ! empty( $assoc_args['include-root'] ) ) {
+			$this->include_root = true;
 		}
 
 		if ( empty( $wp_version ) ) {
@@ -136,6 +150,10 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 * @return bool
 	 */
 	protected function filter_file( $filepath ) {
+		if ( true === $this->include_root ) {
+			return ( 1 !== preg_match( '/^(wp-config\.php$|wp-content\/)/', $filepath ) );
+		}
+
 		return ( 0 === strpos( $filepath, 'wp-admin/' )
 			|| 0 === strpos( $filepath, 'wp-includes/' )
 			|| 1 === preg_match( '/^wp-(?!config\.php)([^\/]*)$/', $filepath )
