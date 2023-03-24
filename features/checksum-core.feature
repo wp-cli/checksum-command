@@ -27,11 +27,13 @@ Feature: Validate checksums for WordPress install
     When I run `rm readme.html`
     Then STDERR should be empty
 
-    When I run `wp core verify-checksums`
-    Then STDOUT should be:
+    When I try `wp core verify-checksums`
+    Then STDERR should be:
       """
-      Success: WordPress installation verifies against checksums.
+      Warning: File doesn't exist: readme.html
+      Error: WordPress installation doesn't verify against checksums.
       """
+    And the return code should be 1
 
   Scenario: Core checksums don't verify because wp-cli.yml is present
     Given a WP install
