@@ -173,3 +173,15 @@ Feature: Validate checksums for WordPress plugins
       """
       "plugin_name":"duplicate-post","file":"duplicate-post.php","message":"Checksum does not match"
       """
+
+  Scenario: Skip plugin checksum verification
+    Given a WP install
+    And these installed and active plugins:
+      """
+      hello-dolly
+      """
+    When I try `wp plugin verify-checksums --all --exclude=hello-dolly`
+    Then STDOUT should contain:
+      """
+      Verified 0 of 1 plugins (1 skipped).
+      """
