@@ -13,7 +13,7 @@ Feature: Validate checksums for WordPress plugins
       Success: Verified 1 of 1 plugins.
       """
 
-    When I run `wp plugin verify-checksums duplicate-post --format=json --version=3.2.2`
+    When I try `wp plugin verify-checksums duplicate-post --format=json --version=3.2.2`
     Then the return code should be 1
     And STDOUT should contain:
       """
