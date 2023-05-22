@@ -86,6 +86,9 @@ wp plugin verify-checksums [<plugin>...] [--all] [--strict] [--format=<format>] 
 		If set, even "soft changes" like readme.txt changes will trigger
 		checksum errors.
 
+	[--version=<version>]
+		Verify checksums against a specific version of plugins.
+
 	[--format=<format>]
 		Render output in a specific format.
 		---
