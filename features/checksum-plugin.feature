@@ -14,7 +14,8 @@ Feature: Validate checksums for WordPress plugins
       """
 
     When I run `wp plugin verify-checksums duplicate-post --format=json --version=3.2.2`
-    Then STDOUT should contain:
+    Then the return code should be 1
+    And STDOUT should contain:
       """
       "plugin_name":"duplicate-post","file":"duplicate-post-jetpack.php","message":"File is missing"
       """
