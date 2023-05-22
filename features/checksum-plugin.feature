@@ -13,6 +13,16 @@ Feature: Validate checksums for WordPress plugins
       Success: Verified 1 of 1 plugins.
       """
 
+    When I run `wp plugin verify-checksums duplicate-post --format=json --version=3.2.2`
+    Then STDOUT should contain:
+      """
+      "plugin_name":"duplicate-post","file":"duplicate-post-jetpack.php","message":"File is missing"
+      """
+    And STDERR should be:
+      """
+      Error: No plugins verified (1 failed).
+      """
+
   Scenario: Modified plugin doesn't verify
     Given a WP install
 
