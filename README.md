@@ -87,7 +87,7 @@ wp plugin verify-checksums [<plugin>...] [--all] [--strict] [--format=<format>] 
 		checksum errors.
 
 	[--version=<version>]
-		Verify checksums against a specific version of plugins.
+		Verify checksums against a specific plugin version.
 
 	[--format=<format>]
 		Render output in a specific format.
