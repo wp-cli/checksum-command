@@ -49,7 +49,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 * checksum errors.
 	 *
 	 * [--version=<version>]
-	 * : Verify checksums against a specific version of plugins.
+	 * : Verify checksums against a specific plugin version.
 	 *
 	 * [--format=<format>]
 	 * : Render output in a specific format.
