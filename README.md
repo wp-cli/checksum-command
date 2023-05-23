@@ -71,7 +71,7 @@ site.
 Verifies plugin files against WordPress.org's checksums.
 
 ~~~
-wp plugin verify-checksums [<plugin>...] [--all] [--strict] [--format=<format>] [--insecure]
+wp plugin verify-checksums [<plugin>...] [--all] [--strict] [--version=<version>] [--format=<format>] [--insecure]
 ~~~
 
 **OPTIONS**
