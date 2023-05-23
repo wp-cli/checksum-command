@@ -48,6 +48,9 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 * : If set, even "soft changes" like readme.txt changes will trigger
 	 * checksum errors.
 	 *
+	 * [--version=<version>]
+	 * : Verify checksums against a specific plugin version.
+	 *
 	 * [--format=<format>]
 	 * : Render output in a specific format.
 	 * ---
@@ -75,11 +78,12 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 */
 	public function __invoke( $args, $assoc_args ) {
 
-		$fetcher  = new Fetchers\UnfilteredPlugin();
-		$all      = (bool) Utils\get_flag_value( $assoc_args, 'all', false );
-		$strict   = (bool) Utils\get_flag_value( $assoc_args, 'strict', false );
-		$insecure = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
-		$plugins  = $fetcher->get_many( $all ? $this->get_all_plugin_names() : $args );
+		$fetcher     = new Fetchers\UnfilteredPlugin();
+		$all         = (bool) Utils\get_flag_value( $assoc_args, 'all', false );
+		$strict      = (bool) Utils\get_flag_value( $assoc_args, 'strict', false );
+		$insecure    = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$plugins     = $fetcher->get_many( $all ? $this->get_all_plugin_names() : $args );
+		$version_arg = isset( $assoc_args['version'] ) ? $assoc_args['version'] : '';
 
 		if ( empty( $plugins ) && ! $all ) {
 			WP_CLI::error( 'You need to specify either one or more plugin slugs to check or use the --all flag to check all plugins.' );
@@ -88,7 +92,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		$skips = 0;
 
 		foreach ( $plugins as $plugin ) {
-			$version = $this->get_plugin_version( $plugin->file );
+			$version = empty( $version_arg ) ? $this->get_plugin_version( $plugin->file ) : $version_arg;
 
 			if ( false === $version ) {
 				WP_CLI::warning( "Could not retrieve the version for plugin {$plugin->name}, skipping." );
