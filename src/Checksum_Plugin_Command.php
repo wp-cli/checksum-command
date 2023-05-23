@@ -83,7 +83,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		$strict      = (bool) Utils\get_flag_value( $assoc_args, 'strict', false );
 		$insecure    = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
 		$plugins     = $fetcher->get_many( $all ? $this->get_all_plugin_names() : $args );
-		$version_cli = isset( $assoc_args['version'] ) ? $assoc_args['version'] : '';
+		$version_arg = isset( $assoc_args['version'] ) ? $assoc_args['version'] : '';
 
 		if ( empty( $plugins ) && ! $all ) {
 			WP_CLI::error( 'You need to specify either one or more plugin slugs to check or use the --all flag to check all plugins.' );
@@ -92,7 +92,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		$skips = 0;
 
 		foreach ( $plugins as $plugin ) {
-			$version = empty( $version_cli ) ? $this->get_plugin_version( $plugin->file ) : $version_cli;
+			$version = empty( $version_arg ) ? $this->get_plugin_version( $plugin->file ) : $version_arg;
 
 			if ( false === $version ) {
 				WP_CLI::warning( "Could not retrieve the version for plugin {$plugin->name}, skipping." );
