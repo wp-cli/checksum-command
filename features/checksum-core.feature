@@ -175,6 +175,10 @@ Feature: Validate checksums for WordPress install
       """
     And STDERR should not contain:
       """
+      Warning: File should not exist: .htaccess
+      """
+    And STDERR should not contain:
+      """
       Warning: File should not exist: wp-content/unknown-file.php
       """
     And STDOUT should be:
