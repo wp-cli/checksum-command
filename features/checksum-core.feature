@@ -147,6 +147,10 @@ Feature: Validate checksums for WordPress install
 
   Scenario: Verify core checksums when extra files are included in WordPress root and --include-root is passed
     Given a WP install
+    And a .htaccess file:
+      """
+      # BEGIN WordPress
+      """
     And a extra-file.php file:
       """
       hello world
@@ -168,6 +172,10 @@ Feature: Validate checksums for WordPress install
     And STDERR should contain:
       """
       Warning: File should not exist: extra-file.php
+      """
+    And STDERR should not contain:
+      """
+      Warning: File should not exist: .htaccess
       """
     And STDERR should not contain:
       """
