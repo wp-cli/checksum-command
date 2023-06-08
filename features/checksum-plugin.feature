@@ -176,10 +176,19 @@ Feature: Validate checksums for WordPress plugins
 
   Scenario: Plugin verification is skipped when the --exclude argument is included
     Given a WP install
-    And these installed and active plugins:
+
+    When I run `wp plugin delete --all`
+    Then STDOUT should contain:
       """
-      akismet
+      Success:
       """
+
+    When I run `wp plugin install akismet`
+    Then STDOUT should contain:
+      """
+      Success:
+      """
+
     When I try `wp plugin verify-checksums --all --exclude=akismet`
     Then STDOUT should contain:
       """
@@ -188,10 +197,19 @@ Feature: Validate checksums for WordPress plugins
 
   Scenario: Plugin is verified when the --exclude argument isn't included
     Given a WP install
-    And these installed and active plugins:
+
+    When I run `wp plugin delete --all`
+    Then STDOUT should contain:
       """
-      akismet
+      Success:
       """
+
+    When I run `wp plugin install akismet`
+    Then STDOUT should contain:
+      """
+      Success:
+      """
+
     When I try `wp plugin verify-checksums --all`
     Then STDOUT should contain:
       """
