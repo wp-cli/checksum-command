@@ -71,7 +71,7 @@ site.
 Verifies plugin files against WordPress.org's checksums.
 
 ~~~
-wp plugin verify-checksums [<plugin>...] [--all] [--strict] [--version=<version>] [--format=<format>] [--insecure]
+wp plugin verify-checksums [<plugin>...] [--all] [--strict] [--version=<version>] [--format=<format>] [--insecure] [--exclude=<name>]
 ~~~
 
 **OPTIONS**
@@ -103,6 +103,9 @@ wp plugin verify-checksums [<plugin>...] [--all] [--strict] [--version=<version>
 
 	[--insecure]
 		Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
+
+	[--exclude=<name>]
+		Comma separated list of plugin names that should be excluded from verifying.
 
 **EXAMPLES**
 
