@@ -173,3 +173,45 @@ Feature: Validate checksums for WordPress plugins
       """
       "plugin_name":"duplicate-post","file":"duplicate-post.php","message":"Checksum does not match"
       """
+
+  Scenario: Plugin verification is skipped when the --exclude argument is included
+    Given a WP install
+
+    When I run `wp plugin delete --all`
+    Then STDOUT should contain:
+      """
+      Success:
+      """
+
+    When I run `wp plugin install akismet`
+    Then STDOUT should contain:
+      """
+      Success:
+      """
+
+    When I try `wp plugin verify-checksums --all --exclude=akismet`
+    Then STDOUT should contain:
+      """
+      Verified 0 of 1 plugins (1 skipped).
+      """
+
+  Scenario: Plugin is verified when the --exclude argument isn't included
+    Given a WP install
+
+    When I run `wp plugin delete --all`
+    Then STDOUT should contain:
+      """
+      Success:
+      """
+
+    When I run `wp plugin install akismet`
+    Then STDOUT should contain:
+      """
+      Success:
+      """
+
+    When I try `wp plugin verify-checksums --all`
+    Then STDOUT should contain:
+      """
+      Verified 1 of 1 plugins.
+      """

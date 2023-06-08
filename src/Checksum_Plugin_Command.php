@@ -66,6 +66,9 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 * [--insecure]
 	 * : Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 	 *
+	 * [--exclude=<name>]
+	 * : Comma separated list of plugin names that should be excluded from verifying.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Verify the checksums of all installed plugins
@@ -83,16 +86,24 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		$strict      = (bool) Utils\get_flag_value( $assoc_args, 'strict', false );
 		$insecure    = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
 		$plugins     = $fetcher->get_many( $all ? $this->get_all_plugin_names() : $args );
+		$exclude     = Utils\get_flag_value( $assoc_args, 'exclude', '' );
 		$version_arg = isset( $assoc_args['version'] ) ? $assoc_args['version'] : '';
 
 		if ( empty( $plugins ) && ! $all ) {
 			WP_CLI::error( 'You need to specify either one or more plugin slugs to check or use the --all flag to check all plugins.' );
 		}
 
+		$exclude_list = explode( ',', $exclude );
+
 		$skips = 0;
 
 		foreach ( $plugins as $plugin ) {
 			$version = empty( $version_arg ) ? $this->get_plugin_version( $plugin->file ) : $version_arg;
+
+			if ( in_array( $plugin->name, $exclude_list, true ) ) {
+				$skips++;
+				continue;
+			}
 
 			if ( false === $version ) {
 				WP_CLI::warning( "Could not retrieve the version for plugin {$plugin->name}, skipping." );
