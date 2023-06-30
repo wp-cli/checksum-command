@@ -151,6 +151,11 @@ Feature: Validate checksums for WordPress install
       """
       # BEGIN WordPress
       """
+    And a .maintenance file:
+      """
+      <?php
+      $upgrading = time();
+      """
     And a extra-file.php file:
       """
       hello world
@@ -176,6 +181,10 @@ Feature: Validate checksums for WordPress install
     And STDERR should not contain:
       """
       Warning: File should not exist: .htaccess
+      """
+    And STDERR should not contain:
+      """
+      Warning: File should not exist: .maintenance
       """
     And STDERR should not contain:
       """
