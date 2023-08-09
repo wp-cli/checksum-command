@@ -1,6 +1,6 @@
 Feature: Validate checksums for WordPress install
 
-  @require-php-5.6
+  @require-php-7.0
   Scenario: Verify core checksums
     Given a WP install
 
@@ -103,7 +103,7 @@ Feature: Validate checksums for WordPress install
       """
     And the return code should be 0
 
-  @require-php-5.6
+  @require-php-7.0
   Scenario: Verify core checksums with extra files
     Given a WP install
 
