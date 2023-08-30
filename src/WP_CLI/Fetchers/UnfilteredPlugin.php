@@ -36,4 +36,3 @@ class UnfilteredPlugin extends Base {
 		return false;
 	}
 }
-
