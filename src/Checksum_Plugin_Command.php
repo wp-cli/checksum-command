@@ -101,13 +101,13 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			$version = empty( $version_arg ) ? $this->get_plugin_version( $plugin->file ) : $version_arg;
 
 			if ( in_array( $plugin->name, $exclude_list, true ) ) {
-				$skips++;
+				++$skips;
 				continue;
 			}
 
 			if ( false === $version ) {
 				WP_CLI::warning( "Could not retrieve the version for plugin {$plugin->name}, skipping." );
-				$skips++;
+				++$skips;
 				continue;
 			}
 
@@ -122,7 +122,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 			if ( false === $checksums ) {
 				WP_CLI::warning( "Could not retrieve the checksums for version {$version} of plugin {$plugin->name}, skipping." );
-				$skips++;
+				++$skips;
 				continue;
 			}
 
