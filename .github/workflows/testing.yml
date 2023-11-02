@@ -11,4 +11,4 @@ on:
 
 jobs:
   test:
-    uses: wp-cli/.github/.github/workflows/reusable-testing.yml@main
+    uses: wp-cli/.github/.github/workflows/reusable-testing.yml@separate-matrix-v2
