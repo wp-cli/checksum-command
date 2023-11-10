@@ -113,8 +113,13 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 			$wp_org_api = new WpOrgApi( [ 'insecure' => $insecure ] );
 
+			$plugin_name = $plugin->name;
+			if ( 'hello' === $plugin_name ) {
+				$plugin_name = 'hello-dolly';
+			}
+
 			try {
-				$checksums = $wp_org_api->get_plugin_checksums( $plugin->name, $version );
+				$checksums = $wp_org_api->get_plugin_checksums( $plugin_name, $version );
 			} catch ( Exception $exception ) {
 				WP_CLI::warning( $exception->getMessage() );
 				$checksums = false;
@@ -129,6 +134,10 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			$files = $this->get_plugin_files( $plugin->file );
 
 			foreach ( $checksums as $file => $checksum_array ) {
+				if ( $plugin->name === 'hello' && $file !== 'hello.php') {
+					continue;
+				}
+
 				if ( ! in_array( $file, $files, true ) ) {
 					$this->add_error( $plugin->name, $file, 'File is missing' );
 				}
@@ -143,7 +152,6 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 				if ( ! $strict && $this->is_soft_change_file( $file ) ) {
 					continue;
 				}
-
 				$result = $this->check_file_checksum( dirname( $plugin->file ) . '/' . $file, $checksums[ $file ] );
 				if ( true !== $result ) {
 					$this->add_error( $plugin->name, $file, is_string( $result ) ? $result : 'Checksum does not match' );
@@ -255,7 +263,6 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			&& array_key_exists( 'sha256', $checksums )
 		) {
 			$sha256 = $this->get_sha256( $this->get_absolute_path( $path ) );
-
 			return in_array( $sha256, (array) $checksums['sha256'], true );
 		}
 
