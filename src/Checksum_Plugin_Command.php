@@ -105,6 +105,11 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 				continue;
 			}
 
+			if ( 'hello' === $plugin->name ) {
+				$this->verify_hello_dolly_from_core( $assoc_args );
+				continue;
+			}
+
 			if ( false === $version ) {
 				WP_CLI::warning( "Could not retrieve the version for plugin {$plugin->name}, skipping." );
 				++$skips;
@@ -143,7 +148,6 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 				if ( ! $strict && $this->is_soft_change_file( $file ) ) {
 					continue;
 				}
-
 				$result = $this->check_file_checksum( dirname( $plugin->file ) . '/' . $file, $checksums[ $file ] );
 				if ( true !== $result ) {
 					$this->add_error( $plugin->name, $file, is_string( $result ) ? $result : 'Checksum does not match' );
@@ -171,6 +175,29 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			$failures,
 			$skips
 		);
+	}
+
+	private function verify_hello_dolly_from_core( $assoc_args ) {
+		$file       = 'hello.php';
+		$wp_version = get_bloginfo( 'version', 'display' );
+		$insecure   = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$wp_org_api = new WpOrgApi( [ 'insecure' => $insecure ] );
+		$locale     = '';
+
+		try {
+			$checksums = $wp_org_api->get_core_checksums( $wp_version, empty( $locale ) ? 'en_US' : $locale );
+		} catch ( Exception $exception ) {
+			WP_CLI::error( $exception );
+		}
+
+		if ( ! is_array( $checksums ) || ! isset( $checksums['wp-content/plugins/hello.php'] ) ) {
+			WP_CLI::error( "Couldn't get hello.php checksum from WordPress.org." );
+		}
+
+		$md5_file = md5_file( $this->get_absolute_path( '/' ) . $file );
+		if ( $md5_file !== $checksums['wp-content/plugins/hello.php'] ) {
+			$this->add_error( 'hello', $file, 'Checksum does not match' );
+		}
 	}
 
 	/**
@@ -255,7 +282,6 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			&& array_key_exists( 'sha256', $checksums )
 		) {
 			$sha256 = $this->get_sha256( $this->get_absolute_path( $path ) );
-
 			return in_array( $sha256, (array) $checksums['sha256'], true );
 		}
 

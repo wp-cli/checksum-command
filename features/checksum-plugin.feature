@@ -215,3 +215,12 @@ Feature: Validate checksums for WordPress plugins
       """
       Verified 1 of 1 plugins.
       """
+
+  Scenario: Verifies Hello Dolly
+    Given a WP install
+
+    When I run `wp plugin verify-checksums hello`
+    Then STDOUT should contain:
+      """
+      Verified 1 of 1 plugins.
+      """
