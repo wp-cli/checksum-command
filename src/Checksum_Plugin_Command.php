@@ -105,6 +105,11 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 				continue;
 			}
 
+			if ( 'hello' === $plugin->name ) {
+				$this->verify_hello_dolly_from_core($assoc_args);
+				continue;
+			}
+
 			if ( false === $version ) {
 				WP_CLI::warning( "Could not retrieve the version for plugin {$plugin->name}, skipping." );
 				++$skips;
@@ -113,13 +118,8 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 			$wp_org_api = new WpOrgApi( [ 'insecure' => $insecure ] );
 
-			$plugin_name = $plugin->name;
-			if ( 'hello' === $plugin_name ) {
-				$plugin_name = 'hello-dolly';
-			}
-
 			try {
-				$checksums = $wp_org_api->get_plugin_checksums( $plugin_name, $version );
+				$checksums = $wp_org_api->get_plugin_checksums( $plugin->name, $version );
 			} catch ( Exception $exception ) {
 				WP_CLI::warning( $exception->getMessage() );
 				$checksums = false;
@@ -134,10 +134,6 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			$files = $this->get_plugin_files( $plugin->file );
 
 			foreach ( $checksums as $file => $checksum_array ) {
-				if ( $plugin->name === 'hello' && $file !== 'hello.php') {
-					continue;
-				}
-
 				if ( ! in_array( $file, $files, true ) ) {
 					$this->add_error( $plugin->name, $file, 'File is missing' );
 				}
@@ -179,6 +175,29 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			$failures,
 			$skips
 		);
+	}
+
+	private function verify_hello_dolly_from_core($assoc_args) {
+		$file = 'hello.php';
+		$wp_version = get_bloginfo( 'version', 'display' );
+		$insecure    = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$wp_org_api = new WpOrgApi( [ 'insecure' => $insecure ] );
+		$locale = '';
+
+		try {
+			$checksums = $wp_org_api->get_core_checksums( $wp_version, empty( $locale ) ? 'en_US' : $locale );
+		} catch ( Exception $exception ) {
+			WP_CLI::error( $exception );
+		}
+
+		if ( ! is_array( $checksums ) || !isset($checksums['wp-content/plugins/hello.php'] ) ) {
+			WP_CLI::error( "Couldn't get hello.php checksum from WordPress.org." );
+		}
+
+		$md5_file = md5_file( $this->get_absolute_path('/') . $file );
+		if ( $md5_file !== $checksums['wp-content/plugins/hello.php'] ) {
+			$this->add_error( 'hello', $file, 'Checksum does not match' );
+		}
 	}
 
 	/**
