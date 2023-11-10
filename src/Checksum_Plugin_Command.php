@@ -106,7 +106,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			}
 
 			if ( 'hello' === $plugin->name ) {
-				$this->verify_hello_dolly_from_core($assoc_args);
+				$this->verify_hello_dolly_from_core( $assoc_args );
 				continue;
 			}
 
@@ -177,12 +177,12 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		);
 	}
 
-	private function verify_hello_dolly_from_core($assoc_args) {
-		$file = 'hello.php';
+	private function verify_hello_dolly_from_core( $assoc_args ) {
+		$file       = 'hello.php';
 		$wp_version = get_bloginfo( 'version', 'display' );
-		$insecure    = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$insecure   = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
 		$wp_org_api = new WpOrgApi( [ 'insecure' => $insecure ] );
-		$locale = '';
+		$locale     = '';
 
 		try {
 			$checksums = $wp_org_api->get_core_checksums( $wp_version, empty( $locale ) ? 'en_US' : $locale );
@@ -190,11 +190,11 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			WP_CLI::error( $exception );
 		}
 
-		if ( ! is_array( $checksums ) || !isset($checksums['wp-content/plugins/hello.php'] ) ) {
+		if ( ! is_array( $checksums ) || ! isset( $checksums['wp-content/plugins/hello.php'] ) ) {
 			WP_CLI::error( "Couldn't get hello.php checksum from WordPress.org." );
 		}
 
-		$md5_file = md5_file( $this->get_absolute_path('/') . $file );
+		$md5_file = md5_file( $this->get_absolute_path( '/' ) . $file );
 		if ( $md5_file !== $checksums['wp-content/plugins/hello.php'] ) {
 			$this->add_error( 'hello', $file, 'Checksum does not match' );
 		}
