@@ -18,6 +18,13 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	private $include_root = false;
 
 	/**
+	 * Files to exclude from the verification.
+	 *
+	 * @var array
+	 */
+	private $exclude_files = [];
+
+	/**
 	 * Verifies WordPress files against WordPress.org's checksums.
 	 *
 	 * Downloads md5 checksums for the current version from WordPress.org, and
@@ -44,6 +51,9 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 * [--insecure]
 	 * : Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 	 *
+	 * [--exclude=<files>]
+	 * : Exclude specific files from the checksum verification. Provide a space-separated list of file paths.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Verify checksums
@@ -64,6 +74,10 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 *     Warning: File doesn't verify against checksum: readme.html
 	 *     Warning: File doesn't verify against checksum: wp-config-sample.php
 	 *     Error: WordPress installation doesn't verify against checksums.
+	 * 
+	 * 	   # Verify checksums
+	 *     $ wp core verify-checksums --exclude="readme.html"
+	 *     Success: WordPress installation verifies against checksums.
 	 *
 	 * @when before_wp_load
 	 */
@@ -81,6 +95,10 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 
 		if ( ! empty( $assoc_args['include-root'] ) ) {
 			$this->include_root = true;
+		}
+
+		if ( ! empty( $assoc_args['exclude'] ) ) {
+			$this->exclude_files = explode( ' ', $assoc_args['exclude'] );
 		}
 
 		if ( empty( $wp_version ) ) {
@@ -112,6 +130,10 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 				continue;
 			}
 
+			if ( in_array( $file, $this->exclude_files, true ) ) {
+				continue;
+			}
+
 			if ( ! file_exists( ABSPATH . $file ) ) {
 				WP_CLI::warning( "File doesn't exist: {$file}" );
 				$has_errors = true;
@@ -131,6 +153,9 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 
 		if ( ! empty( $additional_files ) ) {
 			foreach ( $additional_files as $additional_file ) {
+				if ( in_array( $additional_file, $this->exclude_files, true ) ) {
+					continue;
+				}
 				WP_CLI::warning( "File should not exist: {$additional_file}" );
 			}
 		}
