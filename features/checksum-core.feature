@@ -231,14 +231,10 @@ Feature: Validate checksums for WordPress install
   
   Scenario: Verify core checksums with excluded files
   Given a WP install
-  And "WordPress" replaced with "Wordpress" in the readme.html file
+  And "WordPress" replaced with "PressWord" in the readme.html file
   And a wp-includes/some-filename.php file:
     """
     sample content of some file
-    """
-  And a readme.html file:
-    """
-    # You really should read me
     """
 
   When I try `wp core verify-checksums --exclude='readme.html wp-includes/some-filename.php'`
@@ -249,3 +245,18 @@ Feature: Validate checksums for WordPress install
     """
   And the return code should be 0
 
+  Scenario: Verify core checksums with missing one excluded file
+  Given a WP install
+  And "WordPress" replaced with "PressWord" in the readme.html file
+  And a wp-includes/some-filename.php file:
+    """
+    sample content of some file
+    """
+
+  When I try `wp core verify-checksums --exclude=' wp-includes/some-filename.php'`
+  Then STDERR should be:
+      """
+      Warning: File doesn't verify against checksum: readme.html
+      Error: WordPress installation doesn't verify against checksums.
+      """
+  And the return code should be 1
