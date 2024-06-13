@@ -52,7 +52,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 * : Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
 	 *
 	 * [--exclude=<files>]
-	 * : Exclude specific files from the checksum verification. Provide a space-separated list of file paths.
+	 * : Exclude specific files from the checksum verification. Provide a comma-separated list of file paths.
 	 *
 	 * ## EXAMPLES
 	 *
@@ -74,8 +74,8 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 *     Warning: File doesn't verify against checksum: readme.html
 	 *     Warning: File doesn't verify against checksum: wp-config-sample.php
 	 *     Error: WordPress installation doesn't verify against checksums.
-	 * 
-	 * 	   # Verify checksums
+	 *
+	 *     # Verify checksums and exclude files
 	 *     $ wp core verify-checksums --exclude="readme.html"
 	 *     Success: WordPress installation verifies against checksums.
 	 *
@@ -98,7 +98,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 		}
 
 		if ( ! empty( $assoc_args['exclude'] ) ) {
-			$this->exclude_files = explode( ' ', $assoc_args['exclude'] );
+			$this->exclude_files = explode( ',', Utils\get_flag_value( $assoc_args, 'exclude', '' ) );
 		}
 
 		if ( empty( $wp_version ) ) {
