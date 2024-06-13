@@ -228,3 +228,20 @@ Feature: Validate checksums for WordPress install
       Success: WordPress installation verifies against checksums.
       """
     And STDERR should be empty
+
+  Scenario: Verify core checksums with excluded file
+    Given a WP install
+    And I run `rm wp-config-sample.php`
+    
+    When I try `wp core verify-checksums`
+    Then STDERR should contain:
+      """
+      Warning: File doesn't exist: wp-config-sample.php
+      """
+
+    When I run `wp core verify-checksums --exclude=wp-config-sample.php`
+    Then STDOUT should be:
+      """
+      Success: WordPress installation verifies against checksums.
+      """
+    And STDERR should be empty

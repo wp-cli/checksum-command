@@ -18,6 +18,13 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	private $include_root = false;
 
 	/**
+	 * Files or directories to exclude from verification.
+	 *
+	 * @var array
+	 */
+	private $exclude_paths = [];
+
+	/**
 	 * Verifies WordPress files against WordPress.org's checksums.
 	 *
 	 * Downloads md5 checksums for the current version from WordPress.org, and
@@ -43,6 +50,9 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 *
 	 * [--insecure]
 	 * : Retry downloads without certificate validation if TLS handshake fails. Note: This makes the request vulnerable to a MITM attack.
+	 *
+	 * [--exclude=<paths>]
+	 * : Comma-separated list of files or directories to exclude from checksum verification.
 	 *
 	 * ## EXAMPLES
 	 *
@@ -83,6 +93,10 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 			$this->include_root = true;
 		}
 
+		if ( ! empty( $assoc_args['exclude'] ) ) {
+			$this->exclude_paths = explode( ',', $assoc_args['exclude'] );
+		}
+
 		if ( empty( $wp_version ) ) {
 			$details    = self::get_wp_details();
 			$wp_version = $details['wp_version'];
@@ -112,6 +126,11 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 				continue;
 			}
 
+			// Skip excluded paths
+			if ( $this->is_excluded( $file ) ) {
+				continue;
+			}
+
 			if ( ! file_exists( ABSPATH . $file ) ) {
 				WP_CLI::warning( "File doesn't exist: {$file}" );
 				$has_errors = true;
@@ -131,6 +150,10 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 
 		if ( ! empty( $additional_files ) ) {
 			foreach ( $additional_files as $additional_file ) {
+				// Skip excluded paths
+				if ( $this->is_excluded( $additional_file ) ) {
+					continue;
+				}
 				WP_CLI::warning( "File should not exist: {$additional_file}" );
 			}
 		}
@@ -140,6 +163,22 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 		} else {
 			WP_CLI::error( "WordPress installation doesn't verify against checksums." );
 		}
+	}
+
+	/**
+	 * Checks if a file path is excluded.
+	 *
+	 * @param string $file Path to a file.
+	 *
+	 * @return bool
+	 */
+	private function is_excluded( $file ) {
+		foreach ( $this->exclude_paths as $exclude_path ) {
+			if ( strpos( $file, $exclude_path ) !== false ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
