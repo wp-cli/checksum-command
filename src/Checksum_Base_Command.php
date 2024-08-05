@@ -58,7 +58,7 @@ class Checksum_Base_Command extends WP_CLI_Command {
 						$path,
 						RecursiveDirectoryIterator::SKIP_DOTS
 					),
-					function ( $current, $key, $iterator ) use ( $path ) {
+					function ( $current ) use ( $path ) {
 						return $this->filter_file( self::normalize_directory_separators( substr( $current->getPathname(), strlen( $path ) ) ) );
 					}
 				),
