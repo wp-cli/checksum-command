@@ -67,9 +67,11 @@ site.
     Warning: File doesn't verify against checksum: wp-config-sample.php
     Error: WordPress installation doesn't verify against checksums.
 
-    # Verify checksums excluding specific files
-    $ wp core verify-checksums --exclude="wp-my-custom-file.php,readme.html"
+    # Verify checksums and exclude files
+    $ wp core verify-checksums --exclude="readme.html"
     Success: WordPress installation verifies against checksums.
+
+
 
 ### wp plugin verify-checksums
 
