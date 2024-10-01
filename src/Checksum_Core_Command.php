@@ -241,6 +241,6 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 
 		$value = substr( $code, $start, $end - $start );
 
-		return trim( $value, "'" );
+		return trim( $value, " '" );
 	}
 }
