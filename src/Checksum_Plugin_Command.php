@@ -133,12 +133,6 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 			$files = $this->get_plugin_files( $plugin->file );
 
-			foreach ( $checksums as $file => $checksum_array ) {
-				if ( ! in_array( $file, $files, true ) ) {
-					$this->add_error( $plugin->name, $file, 'File is missing' );
-				}
-			}
-
 			foreach ( $files as $file ) {
 				if ( ! array_key_exists( $file, $checksums ) ) {
 					$this->add_error( $plugin->name, $file, 'File was added' );
