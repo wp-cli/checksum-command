@@ -13,13 +13,6 @@ use WP_CLI\WpOrgApi;
 class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 	/**
-	 * URL template that points to the API endpoint to use.
-	 *
-	 * @var string
-	 */
-	private $url_template = 'https://downloads.wordpress.org/plugin-checksums/{slug}/{version}.json';
-
-	/**
 	 * Cached plugin data for all installed plugins.
 	 *
 	 * @var array|null
