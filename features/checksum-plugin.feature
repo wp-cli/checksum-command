@@ -135,7 +135,7 @@ Feature: Validate checksums for WordPress plugins
           unset( $all_plugins['duplicate-post/duplicate-post.php'] );
           return $all_plugins;
        } );
-       """
+      """
     And "Duplicate Post" replaced with "Different Name" in the wp-content/plugins/duplicate-post/duplicate-post.php file
 
     When I run `wp plugin list --fields=name`
