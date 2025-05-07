@@ -122,7 +122,7 @@ Feature: Validate checksums for WordPress plugins
     And these installed and active plugins:
       """
       debug-bar
-      wptouch
+      rtl-tester
       """
     And a wp-content/mu-plugins/hide-dp-plugin.php file:
       """
