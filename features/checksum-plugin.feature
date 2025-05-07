@@ -121,33 +121,33 @@ Feature: Validate checksums for WordPress plugins
     Given a WP install
     And these installed and active plugins:
       """
-      duplicate-post
+      debug-bar
       wptouch
       """
     And a wp-content/mu-plugins/hide-dp-plugin.php file:
       """
       <?php
       /**
-       * Plugin Name: Hide Duplicate Post plugin
+       * Plugin Name: Hide Debug Bar plugin
        */
 
        add_filter( 'all_plugins', function( $all_plugins ) {
-          unset( $all_plugins['duplicate-post/duplicate-post.php'] );
+          unset( $all_plugins['debug-bar/debug-bar.php'] );
           return $all_plugins;
        } );
       """
-    And "Duplicate Post" replaced with "Different Name" in the wp-content/plugins/duplicate-post/duplicate-post.php file
+    And "Debug Bar" replaced with "Different Name" in the wp-content/plugins/debug-bar/debug-bar.php file
 
     When I run `wp plugin list --fields=name`
     Then STDOUT should not contain:
       """
-      duplicate-post
+      debug-bar
       """
 
     When I try `wp plugin verify-checksums --all --format=json`
     Then STDOUT should contain:
       """
-      "plugin_name":"duplicate-post","file":"duplicate-post.php","message":"Checksum does not match"
+      "plugin_name":"debug-bar","file":"debug-bar.php","message":"Checksum does not match"
       """
 
   Scenario: Plugin verification is skipped when the --exclude argument is included
@@ -159,7 +159,8 @@ Feature: Validate checksums for WordPress plugins
       Success:
       """
 
-    When I run `wp plugin install akismet`
+    # Ignore plugin's version requirements because we don't actually activate it.
+    When I run `wp plugin install akismet --ignore-requirements`
     Then STDOUT should contain:
       """
       Success:
@@ -180,7 +181,8 @@ Feature: Validate checksums for WordPress plugins
       Success:
       """
 
-    When I run `wp plugin install akismet`
+    # Ignore plugin's version requirements because we don't actually activate it.
+    When I run `wp plugin install akismet --ignore-requirements`
     Then STDOUT should contain:
       """
       Success:
