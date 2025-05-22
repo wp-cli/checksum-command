@@ -75,9 +75,9 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	public function __invoke( $args, $assoc_args ) {
 
 		$fetcher  = new Fetchers\UnfilteredPlugin();
-		$all      = (bool) Utils\get_flag_value( $assoc_args, 'all', false );
-		$strict   = (bool) Utils\get_flag_value( $assoc_args, 'strict', false );
-		$insecure = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$all      = Utils\get_flag_value( $assoc_args, 'all', false );
+		$strict   = Utils\get_flag_value( $assoc_args, 'strict', false );
+		$insecure = Utils\get_flag_value( $assoc_args, 'insecure', false );
 		$plugins  = $fetcher->get_many( $all ? $this->get_all_plugin_names() : $args );
 
 		/**
@@ -174,7 +174,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	private function verify_hello_dolly_from_core( $assoc_args ) {
 		$file       = 'hello.php';
 		$wp_version = get_bloginfo( 'version', 'display' );
-		$insecure   = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$insecure   = Utils\get_flag_value( $assoc_args, 'insecure', false );
 		$wp_org_api = new WpOrgApi( [ 'insecure' => $insecure ] );
 		$locale     = 'en_US';
 

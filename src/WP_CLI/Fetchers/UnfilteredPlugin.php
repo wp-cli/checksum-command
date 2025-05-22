@@ -20,7 +20,7 @@ class UnfilteredPlugin extends Base {
 	/**
 	 * Get a plugin object by name.
 	 *
-	 * @param string $name
+	 * @param string|int $name
 	 *
 	 * @return object|false
 	 */
