@@ -28,7 +28,11 @@ class Checksum_Base_Command extends WP_CLI_Command {
 	 * @return mixed
 	 */
 	protected static function _read( $url ) { // phpcs:ignore PSR2.Methods.MethodDeclaration.Underscore -- Could be used in classes extending this class.
-		$headers  = array( 'Accept' => 'application/json' );
+		$headers = array( 'Accept' => 'application/json' );
+
+		/**
+		 * @var \WpOrg\Requests\Response $response
+		 */
 		$response = Utils\http_request(
 			'GET',
 			$url,
@@ -64,6 +68,9 @@ class Checksum_Base_Command extends WP_CLI_Command {
 				),
 				RecursiveIteratorIterator::CHILD_FIRST
 			);
+			/**
+			 * @var \SplFileInfo $file_info
+			 */
 			foreach ( $files as $file_info ) {
 				if ( $file_info->isFile() ) {
 					$filtered_files[] = self::normalize_directory_separators( substr( $file_info->getPathname(), strlen( $path ) ) );
