@@ -74,11 +74,15 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 */
 	public function __invoke( $args, $assoc_args ) {
 
-		$fetcher     = new Fetchers\UnfilteredPlugin();
-		$all         = (bool) Utils\get_flag_value( $assoc_args, 'all', false );
-		$strict      = (bool) Utils\get_flag_value( $assoc_args, 'strict', false );
-		$insecure    = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
-		$plugins     = $fetcher->get_many( $all ? $this->get_all_plugin_names() : $args );
+		$fetcher  = new Fetchers\UnfilteredPlugin();
+		$all      = Utils\get_flag_value( $assoc_args, 'all', false );
+		$strict   = Utils\get_flag_value( $assoc_args, 'strict', false );
+		$insecure = Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$plugins  = $fetcher->get_many( $all ? $this->get_all_plugin_names() : $args );
+
+		/**
+		 * @var string $exclude
+		 */
 		$exclude     = Utils\get_flag_value( $assoc_args, 'exclude', '' );
 		$version_arg = isset( $assoc_args['version'] ) ? $assoc_args['version'] : '';
 
@@ -112,6 +116,9 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			$wp_org_api = new WpOrgApi( [ 'insecure' => $insecure ] );
 
 			try {
+				/**
+				 * @var array|false $checksums
+				 */
 				$checksums = $wp_org_api->get_plugin_checksums( $plugin->name, $version );
 			} catch ( Exception $exception ) {
 				WP_CLI::warning( $exception->getMessage() );
@@ -167,12 +174,12 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	private function verify_hello_dolly_from_core( $assoc_args ) {
 		$file       = 'hello.php';
 		$wp_version = get_bloginfo( 'version', 'display' );
-		$insecure   = (bool) Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$insecure   = Utils\get_flag_value( $assoc_args, 'insecure', false );
 		$wp_org_api = new WpOrgApi( [ 'insecure' => $insecure ] );
-		$locale     = '';
+		$locale     = 'en_US';
 
 		try {
-			$checksums = $wp_org_api->get_core_checksums( $wp_version, empty( $locale ) ? 'en_US' : $locale );
+			$checksums = $wp_org_api->get_core_checksums( $wp_version, $locale );
 		} catch ( Exception $exception ) {
 			WP_CLI::error( $exception );
 		}
@@ -262,7 +269,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 *                          integrity of.
 	 * @param array  $checksums Array of provided checksums to compare against.
 	 *
-	 * @return true|string
+	 * @return bool|string
 	 */
 	private function check_file_checksum( $path, $checksums ) {
 		if ( $this->supports_sha256()
@@ -299,7 +306,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 * @param string $filepath Absolute path to the file to calculate the SHA-2
 	 *                         for.
 	 *
-	 * @return string
+	 * @return string|false
 	 */
 	private function get_sha256( $filepath ) {
 		return hash_file( 'sha256', $filepath );
@@ -311,7 +318,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 * @param string $filepath Absolute path to the file to calculate the MD5
 	 *                         for.
 	 *
-	 * @return string
+	 * @return string|false
 	 */
 	private function get_md5( $filepath ) {
 		return hash_file( 'md5', $filepath );
