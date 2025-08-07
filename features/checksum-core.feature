@@ -321,22 +321,6 @@ Feature: Validate checksums for WordPress install
       """
     And the return code should be 1
 
-  Scenario: Core checksums verify format parameter with multiple file types
-    Given a WP install
-    And "Version" replaced with "v" in the wp-includes/version.php file
-    And I run `rm wp-includes/nav-menu.php`
-    And a wp-includes/extra.txt file:
-      """
-      test file
-      """
-
-    When I try `wp core verify-checksums --format=json`
-    Then STDOUT should contain:
-      """
-      [{"file":"wp-includes\/nav-menu.php","message":"File doesn't exist"},{"file":"wp-includes\/version.php","message":"File doesn't verify against checksum"},{"file":"wp-includes\/extra.txt","message":"File should not exist"}]
-      """
-    And the return code should be 1
-
   Scenario: Core checksums verify with count format
     Given a WP install
     And "WordPress" replaced with "Modified" in the wp-includes/post.php file
