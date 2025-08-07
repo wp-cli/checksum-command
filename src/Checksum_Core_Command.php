@@ -105,8 +105,9 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 * @when before_wp_load
 	 */
 	public function __invoke( $args, $assoc_args ) {
-		$wp_version = '';
-		$locale     = '';
+		$wp_version    = '';
+		$locale        = '';
+		$has_formatter = isset( $assoc_args['format'] );
 
 		if ( ! empty( $assoc_args['version'] ) ) {
 			$wp_version = $assoc_args['version'];
@@ -160,7 +161,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 			}
 
 			if ( ! file_exists( ABSPATH . $file ) ) {
-				if ( isset( $assoc_args['format'] ) ) {
+				if ( $has_formatter ) {
 					$this->add_error( $file, "File doesn't exist" );
 				} else {
 					WP_CLI::warning( "File doesn't exist: {$file}" );
@@ -171,7 +172,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 
 			$md5_file = md5_file( ABSPATH . $file );
 			if ( $md5_file !== $checksum ) {
-				if ( isset( $assoc_args['format'] ) ) {
+				if ( $has_formatter ) {
 					$this->add_error( $file, "File doesn't verify against checksum" );
 				} else {
 					WP_CLI::warning( "File doesn't verify against checksum: {$file}" );
@@ -189,7 +190,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 				if ( in_array( $additional_file, $this->exclude_files, true ) ) {
 					continue;
 				}
-				if ( isset( $assoc_args['format'] ) ) {
+				if ( $has_formatter ) {
 					$this->add_error( $additional_file, 'File should not exist' );
 				} else {
 					WP_CLI::warning( "File should not exist: {$additional_file}" );
@@ -197,7 +198,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 			}
 		}
 
-		if ( ! empty( $this->errors ) && isset( $assoc_args['format'] ) ) {
+		if ( ! empty( $this->errors ) && $has_formatter ) {
 			$formatter = new Formatter(
 				$assoc_args,
 				array( 'file', 'message' )
