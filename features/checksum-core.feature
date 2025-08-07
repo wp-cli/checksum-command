@@ -260,3 +260,163 @@ Feature: Validate checksums for WordPress install
       Error: WordPress installation doesn't verify against checksums.
       """
     And the return code should be 1
+
+  @require-php-7.0
+  Scenario: Verify core checksums with format parameter - success case
+    Given a WP install
+
+    When I run `wp core update`
+    Then STDOUT should not be empty
+
+    When I run `wp core verify-checksums --format=json`
+    Then STDOUT should be:
+      """
+      Success: WordPress installation verifies against checksums.
+      """
+    And the return code should be 0
+
+    When I run `wp core verify-checksums --format=table`
+    Then STDOUT should be:
+      """
+      Success: WordPress installation verifies against checksums.
+      """
+    And the return code should be 0
+
+  Scenario: Verify core checksums with format parameter - error cases
+    Given a WP install
+    And "WordPress" replaced with "Wordpress" in the readme.html file
+
+    When I try `wp core verify-checksums --format=json`
+    Then STDOUT should contain:
+      """
+      {"file":"readme.html","message":"File doesn't verify against checksum"}
+      """
+    And STDERR should be:
+      """
+      Error: WordPress installation doesn't verify against checksums.
+      """
+    And the return code should be 1
+
+    When I try `wp core verify-checksums --format=table`
+    Then STDOUT should contain:
+      """
+      readme.html
+      """
+    And STDOUT should contain:
+      """
+      File doesn't verify against checksum
+      """
+    And STDERR should be:
+      """
+      Error: WordPress installation doesn't verify against checksums.
+      """
+    And the return code should be 1
+
+  Scenario: Verify core checksums with format parameter - missing and extra files
+    Given a WP install
+    And a wp-includes/extra-file.txt file:
+      """
+      hello world
+      """
+
+    When I run `rm readme.html`
+    Then STDERR should be empty
+
+    When I try `wp core verify-checksums --format=csv`
+    Then STDOUT should contain:
+      """
+      file,message
+      """
+    And STDOUT should contain:
+      """
+      readme.html,"File doesn't exist"
+      """
+    And STDOUT should contain:
+      """
+      wp-includes/extra-file.txt,"File should not exist"
+      """
+    And STDERR should be:
+      """
+      Error: WordPress installation doesn't verify against checksums.
+      """
+    And the return code should be 1
+
+  Scenario: Verify core checksums with format parameter - yaml format
+    Given a WP install
+    And "WordPress" replaced with "PressWord" in the readme.html file
+
+    When I try `wp core verify-checksums --format=yaml`
+    Then STDOUT should contain:
+      """
+      ---
+      """
+    And STDOUT should contain:
+      """
+      file: readme.html
+      """
+    And STDOUT should contain:
+      """
+      message: "File doesn't verify against checksum"
+      """
+    And STDERR should be:
+      """
+      Error: WordPress installation doesn't verify against checksums.
+      """
+    And the return code should be 1
+
+  Scenario: Verify core checksums with format parameter - count format
+    Given a WP install
+    And "WordPress" replaced with "PressWord" in the readme.html file
+    And a wp-includes/extra-file.txt file:
+      """
+      hello world
+      """
+
+    When I try `wp core verify-checksums --format=count`
+    Then STDOUT should be:
+      """
+      2
+      """
+    And STDERR should be:
+      """
+      Error: WordPress installation doesn't verify against checksums.
+      """
+    And the return code should be 1
+
+  Scenario: Verify core checksums with format parameter and exclude functionality
+    Given a WP install
+    And "WordPress" replaced with "PressWord" in the readme.html file
+    And a wp-includes/extra-file.txt file:
+      """
+      hello world
+      """
+
+    When I try `wp core verify-checksums --format=json --exclude='readme.html'`
+    Then STDOUT should contain:
+      """
+      {"file":"wp-includes/extra-file.txt","message":"File should not exist"}
+      """
+    And STDOUT should not contain:
+      """
+      readme.html
+      """
+    And STDERR should be:
+      """
+      Error: WordPress installation doesn't verify against checksums.
+      """
+    And the return code should be 1
+
+    When I try `wp core verify-checksums --format=table --exclude='wp-includes/extra-file.txt'`
+    Then STDOUT should contain:
+      """
+      readme.html
+      """
+    And STDOUT should not contain:
+      """
+      wp-includes/extra-file.txt
+      """
+    And STDERR should be:
+      """
+      Error: WordPress installation doesn't verify against checksums.
+      """
+    And the return code should be 1
