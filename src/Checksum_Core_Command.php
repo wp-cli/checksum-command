@@ -1,5 +1,6 @@
 <?php
 
+use WP_CLI\Formatter;
 use WP_CLI\Utils;
 use WP_CLI\WpOrgApi;
 
@@ -23,6 +24,13 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 * @var array
 	 */
 	private $exclude_files = [];
+
+	/**
+	 * Array of detected errors.
+	 *
+	 * @var array
+	 */
+	private $errors = [];
 
 	/**
 	 * Verifies WordPress files against WordPress.org's checksums.
@@ -54,6 +62,18 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 * [--exclude=<files>]
 	 * : Exclude specific files from the checksum verification. Provide a comma-separated list of file paths.
 	 *
+	 * [--format=<format>]
+	 * : Render output in a specific format.
+	 * ---
+	 * default: table
+	 * options:
+	 *   - table
+	 *   - json
+	 *   - csv
+	 *   - yaml
+	 *   - count
+	 * ---
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Verify checksums
@@ -77,6 +97,10 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 *
 	 *     # Verify checksums and exclude files
 	 *     $ wp core verify-checksums --exclude="readme.html"
+	 *     Success: WordPress installation verifies against checksums.
+	 *
+	 *     # Verify checksums with formatted output
+	 *     $ wp core verify-checksums --format=json
 	 *     Success: WordPress installation verifies against checksums.
 	 *
 	 * @when before_wp_load
@@ -137,14 +161,14 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 			}
 
 			if ( ! file_exists( ABSPATH . $file ) ) {
-				WP_CLI::warning( "File doesn't exist: {$file}" );
+				$this->add_error( $file, "File doesn't exist" );
 				$has_errors = true;
 				continue;
 			}
 
 			$md5_file = md5_file( ABSPATH . $file );
 			if ( $md5_file !== $checksum ) {
-				WP_CLI::warning( "File doesn't verify against checksum: {$file}" );
+				$this->add_error( $file, "File doesn't verify against checksum" );
 				$has_errors = true;
 			}
 		}
@@ -158,8 +182,16 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 				if ( in_array( $additional_file, $this->exclude_files, true ) ) {
 					continue;
 				}
-				WP_CLI::warning( "File should not exist: {$additional_file}" );
+				$this->add_error( $additional_file, 'File should not exist' );
 			}
+		}
+
+		if ( ! empty( $this->errors ) ) {
+			$formatter = new Formatter(
+				$assoc_args,
+				array( 'file', 'message' )
+			);
+			$formatter->display_items( $this->errors );
 		}
 
 		if ( ! $has_errors ) {
@@ -203,7 +235,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 		if ( ! is_readable( $versions_path ) ) {
 			WP_CLI::error(
 				"This does not seem to be a WordPress install.\n" .
-				'Pass --path=`path/to/wordpress` or run `wp core download`.'
+					'Pass --path=`path/to/wordpress` or run `wp core download`.'
 			);
 		}
 
@@ -244,5 +276,17 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 		$value = substr( $code, $start, $end - $start );
 
 		return trim( $value, " '" );
+	}
+
+	/**
+	 * Adds a new error to the array of detected errors.
+	 *
+	 * @param string $file    Relative path to the file that had the error.
+	 * @param string $message Message explaining the error.
+	 */
+	private function add_error( $file, $message ) {
+		$error['file']    = $file;
+		$error['message'] = $message;
+		$this->errors[]   = $error;
 	}
 }
