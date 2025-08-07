@@ -247,7 +247,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 		if ( ! is_readable( $versions_path ) ) {
 			WP_CLI::error(
 				"This does not seem to be a WordPress install.\n" .
-					'Pass --path=`path/to/wordpress` or run `wp core download`.'
+				'Pass --path=`path/to/wordpress` or run `wp core download`.'
 			);
 		}
 

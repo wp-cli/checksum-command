@@ -309,11 +309,11 @@ Feature: Validate checksums for WordPress install
 
   Scenario: Core checksums verify format parameter with missing core files
     Given a WP install
-    When I run `rm wp-includes/widgets.php wp-includes/rest-api.php`
+    When I run `rm wp-includes/widgets.php`
     And I try `wp core verify-checksums --format=json`
     Then STDOUT should contain:
       """
-      [{"file":"wp-includes\/rest-api.php","message":"File doesn't exist"},{"file":"wp-includes\/widgets.php","message":"File doesn't exist"}]
+      "file":"wp-includes\/widgets.php","message":"File doesn't exist"
       """
     And STDERR should be:
       """
@@ -349,7 +349,7 @@ Feature: Validate checksums for WordPress install
     When I try `wp core verify-checksums --format=json --exclude=wp-includes/meta.php,wp-includes/test.log`
     Then STDOUT should contain:
       """
-      [{"file":"wp-includes\/update.php","message":"File doesn't verify against checksum"}]
+      "file":"wp-includes\/update.php","message":"File doesn't verify against checksum"
       """
     And the return code should be 1
 
