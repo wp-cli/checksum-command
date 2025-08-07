@@ -63,9 +63,8 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 * : Exclude specific files from the checksum verification. Provide a comma-separated list of file paths.
 	 *
 	 * [--format=<format>]
-	 * : Render output in a specific format.
+	 * : Render output in a specific format. When provided, errors are displayed in tabular format instead of individual warning messages.
 	 * ---
-	 * default: table
 	 * options:
 	 *   - table
 	 *   - json
@@ -161,14 +160,22 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 			}
 
 			if ( ! file_exists( ABSPATH . $file ) ) {
-				$this->add_error( $file, "File doesn't exist" );
+				if ( isset( $assoc_args['format'] ) ) {
+					$this->add_error( $file, "File doesn't exist" );
+				} else {
+					WP_CLI::warning( "File doesn't exist: {$file}" );
+				}
 				$has_errors = true;
 				continue;
 			}
 
 			$md5_file = md5_file( ABSPATH . $file );
 			if ( $md5_file !== $checksum ) {
-				$this->add_error( $file, "File doesn't verify against checksum" );
+				if ( isset( $assoc_args['format'] ) ) {
+					$this->add_error( $file, "File doesn't verify against checksum" );
+				} else {
+					WP_CLI::warning( "File doesn't verify against checksum: {$file}" );
+				}
 				$has_errors = true;
 			}
 		}
@@ -182,11 +189,15 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 				if ( in_array( $additional_file, $this->exclude_files, true ) ) {
 					continue;
 				}
-				$this->add_error( $additional_file, 'File should not exist' );
+				if ( isset( $assoc_args['format'] ) ) {
+					$this->add_error( $additional_file, 'File should not exist' );
+				} else {
+					WP_CLI::warning( "File should not exist: {$additional_file}" );
+				}
 			}
 		}
 
-		if ( ! empty( $this->errors ) ) {
+		if ( ! empty( $this->errors ) && isset( $assoc_args['format'] ) ) {
 			$formatter = new Formatter(
 				$assoc_args,
 				array( 'file', 'message' )
