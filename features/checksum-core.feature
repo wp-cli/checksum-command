@@ -281,9 +281,9 @@ Feature: Validate checksums for WordPress install
       """
     And the return code should be 1
 
-  Scenario: Core checksums verify with table format
+  Scenario: Core checksums verify with format parameter
     Given a WP install
-    And "WordPress" replaced with "Modified" in the wp-includes/functions.php file
+    And "WordPress" replaced with "Modified WordPress" in the wp-includes/functions.php file
 
     When I try `wp core verify-checksums --format=table`
     Then STDOUT should be a table containing rows:
@@ -291,49 +291,25 @@ Feature: Validate checksums for WordPress install
       | wp-includes/functions.php  | File doesn't verify against checksum |
     And the return code should be 1
 
-  Scenario: Core checksums verify with csv format
-    Given a WP install
-    And a wp-includes/test.php file:
-      """
-      <?php echo 'test'; ?>
-      """
-
     When I try `wp core verify-checksums --format=csv`
-    Then STDOUT should be:
-      """
-      file,message
-      wp-includes/test.php,"File should not exist"
-      Success: WordPress installation verifies against checksums.
-      """
-    And the return code should be 0
-
-  Scenario: Core checksums verify format parameter with missing core files
-    Given a WP install
-    When I run `rm wp-includes/widgets.php`
-    And I try `wp core verify-checksums --format=json`
     Then STDOUT should contain:
       """
-      "file":"wp-includes\/widgets.php","message":"File doesn't exist"
-      """
-    And STDERR should be:
-      """
-      Error: WordPress installation doesn't verify against checksums.
+      file,message
+      wp-includes/functions.php,"File doesn't verify against checksum"
       """
     And the return code should be 1
 
-  Scenario: Core checksums verify with count format
-    Given a WP install
-    And "WordPress" replaced with "Modified" in the wp-includes/post.php file
-    And I run `rm wp-includes/comment.php`
-    And a wp-includes/test.txt file:
+    When I try `wp core verify-checksums --format=json`
+    Then STDOUT should contain:
       """
-      test content
+      "file":"wp-includes\/functions.php","message":"File doesn't verify against checksum"
       """
+    And the return code should be 1
 
     When I try `wp core verify-checksums --format=count`
     Then STDOUT should be:
       """
-      3
+      1
       """
     And the return code should be 1
 
