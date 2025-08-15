@@ -174,7 +174,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 			}
 
 			$md5_file = md5_file( ABSPATH . $file );
-			if ( $md5_file !== $checksum ) {
+			if ( $checksum !== $md5_file ) {
 				$this->errors[] = [
 					'file'    => $file,
 					'message' => "File doesn't verify against checksum",
@@ -202,7 +202,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 		}
 
 		if ( ! empty( $this->errors ) ) {
-			if ( ! isset( $assoc_args['format'] ) || $assoc_args['format'] === 'plain' ) {
+			if ( ! isset( $assoc_args['format'] ) || 'plain' === $assoc_args['format'] ) {
 				foreach ( $this->errors as $error ) {
 					WP_CLI::warning( sprintf( '%s: %s', $error['message'], $error['file'] ) );
 				}
@@ -287,7 +287,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	private static function find_var( $var_name, $code ) {
 		$start = strpos( $code, '$' . $var_name . ' = ' );
 
-		if ( ! $start ) {
+		if ( false === $start ) {
 			return null;
 		}
 
