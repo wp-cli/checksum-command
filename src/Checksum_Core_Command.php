@@ -102,7 +102,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 *
 	 *     # Verify checksums with formatted output
 	 *     $ wp core verify-checksums --format=json
-	 * 	   [{"file":"readme.html","message":"File doesn't verify against checksum"}]
+	 *     [{"file":"readme.html","message":"File doesn't verify against checksum"}]
 	 *     Error: WordPress installation doesn't verify against checksums.
 	 *
 	 * @when before_wp_load
@@ -151,6 +151,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 			WP_CLI::error( "Couldn't get checksums from WordPress.org." );
 		}
 
+		$has_errors = false;
 		foreach ( $checksums as $file => $checksum ) {
 			// Skip files which get updated
 			if ( 'wp-content' === substr( $file, 0, 10 ) ) {
@@ -167,6 +168,8 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 					'message' => "File doesn't exist",
 				];
 
+				$has_errors = true;
+
 				continue;
 			}
 
@@ -176,6 +179,8 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 					'file'    => $file,
 					'message' => "File doesn't verify against checksum",
 				];
+
+				$has_errors = true;
 			}
 		}
 
@@ -199,7 +204,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 		if ( ! empty( $this->errors ) ) {
 			if ( ! isset( $assoc_args['format'] ) || $assoc_args['format'] === 'plain' ) {
 				foreach ( $this->errors as $error ) {
-					WP_CLI::error( sprintf( '%s: %s', $error['message'], $error['file'] ) );
+					WP_CLI::warning( sprintf( '%s: %s', $error['message'], $error['file'] ) );
 				}
 			} else {
 				$formatter = new Formatter(
@@ -208,10 +213,12 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 				);
 				$formatter->display_items( $this->errors );
 			}
+		}
 
-			WP_CLI::error( "WordPress installation doesn't verify against checksums." );
-		} else {
+		if ( ! $has_errors ) {
 			WP_CLI::success( 'WordPress installation verifies against checksums.' );
+		} else {
+			WP_CLI::error( "WordPress installation doesn't verify against checksums." );
 		}
 	}
 
