@@ -65,7 +65,9 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 * [--format=<format>]
 	 * : Render output in a specific format. When provided, errors are displayed in tabular format instead of individual warning messages.
 	 * ---
+	 * default: plain
 	 * options:
+	 *   - plain
 	 *   - table
 	 *   - json
 	 *   - csv
@@ -100,14 +102,14 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 *
 	 *     # Verify checksums with formatted output
 	 *     $ wp core verify-checksums --format=json
-	 *     Success: WordPress installation verifies against checksums.
+	 * 	   [{"file":"readme.html","message":"File doesn't verify against checksum"}]
+	 *     Error: WordPress installation doesn't verify against checksums.
 	 *
 	 * @when before_wp_load
 	 */
 	public function __invoke( $args, $assoc_args ) {
-		$wp_version    = '';
-		$locale        = '';
-		$has_formatter = isset( $assoc_args['format'] );
+		$wp_version = '';
+		$locale     = '';
 
 		if ( ! empty( $assoc_args['version'] ) ) {
 			$wp_version = $assoc_args['version'];
@@ -149,7 +151,6 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 			WP_CLI::error( "Couldn't get checksums from WordPress.org." );
 		}
 
-		$has_errors = false;
 		foreach ( $checksums as $file => $checksum ) {
 			// Skip files which get updated
 			if ( 'wp-content' === substr( $file, 0, 10 ) ) {
@@ -161,29 +162,20 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 			}
 
 			if ( ! file_exists( ABSPATH . $file ) ) {
-				if ( $has_formatter ) {
-					$this->errors[] = [
-						'file'    => $file,
-						'message' => "File doesn't exist"
-					];
-				} else {
-					WP_CLI::warning( "File doesn't exist: {$file}" );
-				}
-				$has_errors = true;
+				$this->errors[] = [
+					'file'    => $file,
+					'message' => "File doesn't exist",
+				];
+
 				continue;
 			}
 
 			$md5_file = md5_file( ABSPATH . $file );
 			if ( $md5_file !== $checksum ) {
-				if ( $has_formatter ) {
-					$this->errors[] = [
-						'file'    => $file,
-						'message' => "File doesn't verify against checksum"
-					];
-				} else {
-					WP_CLI::warning( "File doesn't verify against checksum: {$file}" );
-				}
-				$has_errors = true;
+				$this->errors[] = [
+					'file'    => $file,
+					'message' => "File doesn't verify against checksum",
+				];
 			}
 		}
 
@@ -196,29 +188,30 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 				if ( in_array( $additional_file, $this->exclude_files, true ) ) {
 					continue;
 				}
-				if ( $has_formatter ) {
-					$this->errors[] = [
-						'file'    => $additional_file,
-						'message' => 'File should not exist'
-					];
-				} else {
-					WP_CLI::warning( "File should not exist: {$additional_file}" );
-				}
+
+				$this->errors[] = [
+					'file'    => $additional_file,
+					'message' => 'File should not exist',
+				];
 			}
 		}
 
-		if ( ! empty( $this->errors ) && $has_formatter ) {
-			$formatter = new Formatter(
-				$assoc_args,
-				array( 'file', 'message' )
-			);
-			$formatter->display_items( $this->errors );
-		}
+		if ( ! empty( $this->errors ) ) {
+			if ( ! isset( $assoc_args['format'] ) || $assoc_args['format'] === 'plain' ) {
+				foreach ( $this->errors as $error ) {
+					WP_CLI::error( sprintf( '%s: %s', $error['message'], $error['file'] ) );
+				}
+			} else {
+				$formatter = new Formatter(
+					$assoc_args,
+					array( 'file', 'message' )
+				);
+				$formatter->display_items( $this->errors );
+			}
 
-		if ( ! $has_errors ) {
-			WP_CLI::success( 'WordPress installation verifies against checksums.' );
-		} else {
 			WP_CLI::error( "WordPress installation doesn't verify against checksums." );
+		} else {
+			WP_CLI::success( 'WordPress installation verifies against checksums.' );
 		}
 	}
 
