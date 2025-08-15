@@ -162,7 +162,10 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 
 			if ( ! file_exists( ABSPATH . $file ) ) {
 				if ( $has_formatter ) {
-					$this->add_error( $file, "File doesn't exist" );
+					$this->errors[] = [
+						'file'    => $file,
+						'message' => "File doesn't exist"
+					];
 				} else {
 					WP_CLI::warning( "File doesn't exist: {$file}" );
 				}
@@ -173,7 +176,10 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 			$md5_file = md5_file( ABSPATH . $file );
 			if ( $md5_file !== $checksum ) {
 				if ( $has_formatter ) {
-					$this->add_error( $file, "File doesn't verify against checksum" );
+					$this->errors[] = [
+						'file'    => $file,
+						'message' => "File doesn't verify against checksum"
+					];
 				} else {
 					WP_CLI::warning( "File doesn't verify against checksum: {$file}" );
 				}
@@ -191,7 +197,10 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 					continue;
 				}
 				if ( $has_formatter ) {
-					$this->add_error( $additional_file, 'File should not exist' );
+					$this->errors[] = [
+						'file'    => $additional_file,
+						'message' => 'File should not exist'
+					];
 				} else {
 					WP_CLI::warning( "File should not exist: {$additional_file}" );
 				}
@@ -288,17 +297,5 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 		$value = substr( $code, $start, $end - $start );
 
 		return trim( $value, " '" );
-	}
-
-	/**
-	 * Adds a new error to the array of detected errors.
-	 *
-	 * @param string $file    Relative path to the file that had the error.
-	 * @param string $message Message explaining the error.
-	 */
-	private function add_error( $file, $message ) {
-		$error['file']    = $file;
-		$error['message'] = $message;
-		$this->errors[]   = $error;
 	}
 }
