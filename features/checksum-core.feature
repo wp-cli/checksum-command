@@ -263,32 +263,17 @@ Feature: Validate checksums for WordPress install
 
   Scenario: Core checksums verify with format parameter
     Given a WP install
-    And "WordPress" replaced with "Modified WordPress" in the wp-includes/version.php file
-    And a wp-includes/extra-file.txt file:
-      """
-      This is an extra file
-      """
-    And "WordPress" replaced with "PressWord" in the readme.html file
-
-    When I try `wp core verify-checksums --format=json`
-    Then STDOUT should be:
-      """
-      [{"file":"readme.html","message":"File doesn't verify against checksum"},{"file":"wp-includes\/version.php","message":"File doesn't verify against checksum"},{"file":"wp-includes\/extra-file.txt","message":"File should not exist"}]
-      """
-    And STDERR should be:
-      """
-      Error: WordPress installation doesn't verify against checksums.
-      """
-    And the return code should be 1
-
-  Scenario: Core checksums verify with format parameter
-    Given a WP install
     And "WordPress" replaced with "Modified WordPress" in the wp-includes/functions.php file
+    And a wp-includes/test.log file:
+      """
+      log content
+      """
 
     When I try `wp core verify-checksums --format=table`
     Then STDOUT should be a table containing rows:
       | file                       | message                              |
       | wp-includes/functions.php  | File doesn't verify against checksum |
+      | wp-includes/test.log  | File should not exist |
     And the return code should be 1
 
     When I try `wp core verify-checksums --format=csv`
@@ -296,6 +281,7 @@ Feature: Validate checksums for WordPress install
       """
       file,message
       wp-includes/functions.php,"File doesn't verify against checksum"
+      wp-includes/test.log,"File should not exist"
       """
     And the return code should be 1
 
@@ -309,31 +295,18 @@ Feature: Validate checksums for WordPress install
     When I try `wp core verify-checksums --format=count`
     Then STDOUT should be:
       """
-      1
+      2
       """
     And the return code should be 1
 
-  Scenario: Core checksums verify with format parameter and excluded files
-    Given a WP install
-    And "WordPress" replaced with "Modified" in the wp-includes/update.php file
-    And "WordPress" replaced with "Changed" in the wp-includes/meta.php file
-    And a wp-includes/test.log file:
-      """
-      log content
-      """
-
-    When I try `wp core verify-checksums --format=json --exclude=wp-includes/meta.php,wp-includes/test.log`
+    When I try `wp core verify-checksums --format=json --exclude=wp-includes/test.log`
     Then STDOUT should contain:
       """
-      "file":"wp-includes\/update.php","message":"File doesn't verify against checksum"
+      "file":"wp-includes\/functions.php","message":"File doesn't verify against checksum"
       """
     And the return code should be 1
 
-  Scenario: Core checksums verify format parameter with empty result after exclusion
-    Given a WP install
-    And "WordPress" replaced with "Changed" in the wp-includes/cache.php file
-
-    When I try `wp core verify-checksums --format=json --exclude=wp-includes/cache.php`
+    When I try `wp core verify-checksums --format=json --exclude=wp-includes/functions.php,wp-includes/test.log`
     Then STDOUT should be:
       """
       Success: WordPress installation verifies against checksums.
