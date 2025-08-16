@@ -167,7 +167,8 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 					'file'    => $file,
 					'message' => "File doesn't exist",
 				];
-				$has_errors     = true;
+
+				$has_errors = true;
 
 				continue;
 			}
@@ -178,7 +179,8 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 					'file'    => $file,
 					'message' => "File doesn't verify against checksum",
 				];
-				$has_errors     = true;
+
+				$has_errors = true;
 			}
 		}
 
