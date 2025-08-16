@@ -311,4 +311,4 @@ Feature: Validate checksums for WordPress install
       """
       Success: WordPress installation verifies against checksums.
       """
-    And the return code should be 0
+    And the return code should be 00
