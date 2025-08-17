@@ -63,7 +63,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 	 * : Exclude specific files from the checksum verification. Provide a comma-separated list of file paths.
 	 *
 	 * [--format=<format>]
-	 * : Render output in a specific format. When provided, errors are displayed in tabular format instead of individual warning messages.
+	 * : Render output in a specific format. When provided, messages are displayed in the chosen format.
 	 * ---
 	 * default: plain
 	 * options:
