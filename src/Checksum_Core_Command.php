@@ -165,7 +165,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 			if ( ! file_exists( ABSPATH . $file ) ) {
 				$this->errors[] = [
 					'file'    => $file,
-					'message' => "File doesn't exist"
+					'message' => "File doesn't exist",
 				];
 
 				$has_errors = true;
@@ -177,7 +177,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 			if ( $checksum !== $md5_file ) {
 				$this->errors[] = [
 					'file'    => $file,
-					'message' => "File doesn't verify against checksum"
+					'message' => "File doesn't verify against checksum",
 				];
 
 				$has_errors = true;
@@ -196,7 +196,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 
 				$this->errors[] = [
 					'file'    => $additional_file,
-					'message' => 'File should not exist'
+					'message' => 'File should not exist',
 				];
 			}
 		}
