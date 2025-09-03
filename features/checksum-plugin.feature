@@ -194,6 +194,8 @@ Feature: Validate checksums for WordPress plugins
       Verified 1 of 1 plugins.
       """
 
+  # Hello Dolly was moved from a single file to a directory in WordPress 6.9
+  @less-than-wp-6.9
   Scenario: Verifies Hello Dolly
     Given a WP install
 
