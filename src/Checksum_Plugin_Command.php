@@ -287,10 +287,8 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 					}
 				}
 			}
-		} elseif ( false === $files ) {
-			// glob() failed - likely a permission issue, but we can continue
-			// Version will just not be detected from PHP files
 		}
+		// If glob() failed (returns false), version will just not be detected from PHP files
 
 		return false;
 	}
@@ -315,7 +313,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		$plugin_dir = WP_PLUGIN_DIR;
 		if ( is_dir( $plugin_dir ) && is_readable( $plugin_dir ) ) {
 			$dirs = @scandir( $plugin_dir ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
-			if ( false !== $dirs && is_array( $dirs ) ) {
+			if ( false !== $dirs ) {
 				foreach ( $dirs as $dir ) {
 					// Skip special directories and files
 					if ( '.' === $dir || '..' === $dir ) {
