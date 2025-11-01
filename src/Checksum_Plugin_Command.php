@@ -107,6 +107,12 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 				continue;
 			}
 
+			// Check if the main plugin file exists
+			$main_file_path = WP_PLUGIN_DIR . '/' . $plugin->file;
+			if ( ! file_exists( $main_file_path ) ) {
+				WP_CLI::warning( "Plugin {$plugin->name} main file is missing: {$plugin->file}" );
+			}
+
 			if ( false === $version ) {
 				WP_CLI::warning( "Could not retrieve the version for plugin {$plugin->name}, skipping." );
 				++$skips;
@@ -222,24 +228,93 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		}
 
 		if ( ! array_key_exists( $path, $this->plugins_data ) ) {
-			return false;
+			// Try to detect version from any PHP file in the plugin directory
+			return $this->detect_version_from_directory( dirname( $path ) );
 		}
 
 		return $this->plugins_data[ $path ]['Version'];
 	}
 
 	/**
+	 * Attempts to detect plugin version from any PHP file in the plugin directory.
+	 *
+	 * This is used as a fallback when the main plugin file is missing or has no valid headers.
+	 *
+	 * @param string $plugin_dir Plugin directory name (relative to WP_PLUGIN_DIR).
+	 *
+	 * @return string|false Detected version, or false if not found.
+	 */
+	private function detect_version_from_directory( $plugin_dir ) {
+		$plugin_path = WP_PLUGIN_DIR . '/' . $plugin_dir;
+
+		// If it's not a directory (single-file plugin), we can't detect version
+		if ( ! is_dir( $plugin_path ) ) {
+			return false;
+		}
+
+		// Look for version in readme.txt first, as it's commonly accurate
+		$readme_file = $plugin_path . '/readme.txt';
+		if ( file_exists( $readme_file ) ) {
+			$readme_content = file_get_contents( $readme_file );
+			if ( false !== $readme_content && preg_match( '/^Stable tag:\s*(.+)$/mi', $readme_content, $matches ) ) {
+				$version = trim( $matches[1] );
+				if ( 'trunk' !== strtolower( $version ) ) {
+					return $version;
+				}
+			}
+		}
+
+		// If not found in readme, try scanning PHP files for Version header
+		$files = glob( $plugin_path . '/*.php' );
+		if ( is_array( $files ) ) {
+			foreach ( $files as $file ) {
+				$file_content = file_get_contents( $file );
+				if ( false !== $file_content && preg_match( '/^\s*\*\s*Version:\s*(.+)$/mi', $file_content, $matches ) ) {
+					return trim( $matches[1] );
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Gets the names of all installed plugins.
+	 *
+	 * Includes both plugins detected by get_plugins() and plugin directories
+	 * that exist on the filesystem but may not have valid headers.
 	 *
 	 * @return array<string> Names of all installed plugins.
 	 */
 	private function get_all_plugin_names() {
 		$names = array();
+
+		// Get plugins from get_plugins() (those with valid headers)
 		foreach ( get_plugins() as $file => $details ) {
 			$names[] = Utils\get_plugin_name( $file );
 		}
 
-		return $names;
+		// Also scan the filesystem for plugin directories
+		$plugin_dir = WP_PLUGIN_DIR;
+		if ( is_dir( $plugin_dir ) ) {
+			$dirs = scandir( $plugin_dir );
+			if ( false !== $dirs ) {
+				foreach ( $dirs as $dir ) {
+					// Skip special directories and files
+					if ( '.' === $dir || '..' === $dir ) {
+						continue;
+					}
+
+					$full_path = $plugin_dir . '/' . $dir;
+					// Only include directories, not single-file plugins
+					if ( is_dir( $full_path ) && ! in_array( $dir, $names, true ) ) {
+						$names[] = $dir;
+					}
+				}
+			}
+		}
+
+		return array_unique( $names );
 	}
 
 	/**
