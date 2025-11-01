@@ -13,6 +13,12 @@ use WP_CLI\WpOrgApi;
 class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 	/**
+	 * Maximum file size (in bytes) to read when detecting plugin version.
+	 * Set to 1MB to prevent memory exhaustion attacks.
+	 */
+	const MAX_FILE_SIZE_FOR_VERSION_DETECTION = 1048576;
+
+	/**
 	 * Cached plugin data for all installed plugins.
 	 *
 	 * @var array|null
@@ -255,10 +261,10 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		// Look for version in readme.txt first, as it's commonly accurate
 		$readme_file = $plugin_path . '/readme.txt';
 		if ( file_exists( $readme_file ) && is_readable( $readme_file ) ) {
-			// Check file size to prevent memory exhaustion (limit to 1MB)
+			// Check file size to prevent memory exhaustion
 			$file_size = filesize( $readme_file );
-			if ( false !== $file_size && $file_size < 1048576 ) {
-				$readme_content = file_get_contents( $readme_file );
+			if ( false !== $file_size && $file_size < self::MAX_FILE_SIZE_FOR_VERSION_DETECTION ) {
+				$readme_content = @file_get_contents( $readme_file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 				if ( false !== $readme_content && preg_match( '/^Stable tag:\s*(.+)$/mi', $readme_content, $matches ) ) {
 					$version = trim( $matches[1] );
 					if ( 'trunk' !== strtolower( $version ) ) {
@@ -270,17 +276,20 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 		// If not found in readme, try scanning PHP files for Version header
 		$files = glob( $plugin_path . '/*.php' );
-		if ( is_array( $files ) ) {
+		if ( is_array( $files ) && ! empty( $files ) ) {
 			foreach ( $files as $file ) {
-				// Check file size to prevent memory exhaustion (limit to 1MB)
+				// Check file size to prevent memory exhaustion
 				$file_size = filesize( $file );
-				if ( false !== $file_size && $file_size < 1048576 && is_readable( $file ) ) {
-					$file_content = file_get_contents( $file );
+				if ( false !== $file_size && $file_size < self::MAX_FILE_SIZE_FOR_VERSION_DETECTION && is_readable( $file ) ) {
+					$file_content = @file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 					if ( false !== $file_content && preg_match( '/^\s*\*\s*Version:\s*(.+)$/mi', $file_content, $matches ) ) {
 						return trim( $matches[1] );
 					}
 				}
 			}
+		} elseif ( false === $files ) {
+			// glob() failed - likely a permission issue, but we can continue
+			// Version will just not be detected from PHP files
 		}
 
 		return false;
