@@ -254,12 +254,16 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 		// Look for version in readme.txt first, as it's commonly accurate
 		$readme_file = $plugin_path . '/readme.txt';
-		if ( file_exists( $readme_file ) ) {
-			$readme_content = file_get_contents( $readme_file );
-			if ( false !== $readme_content && preg_match( '/^Stable tag:\s*(.+)$/mi', $readme_content, $matches ) ) {
-				$version = trim( $matches[1] );
-				if ( 'trunk' !== strtolower( $version ) ) {
-					return $version;
+		if ( file_exists( $readme_file ) && is_readable( $readme_file ) ) {
+			// Check file size to prevent memory exhaustion (limit to 1MB)
+			$file_size = filesize( $readme_file );
+			if ( false !== $file_size && $file_size < 1048576 ) {
+				$readme_content = file_get_contents( $readme_file );
+				if ( false !== $readme_content && preg_match( '/^Stable tag:\s*(.+)$/mi', $readme_content, $matches ) ) {
+					$version = trim( $matches[1] );
+					if ( 'trunk' !== strtolower( $version ) ) {
+						return $version;
+					}
 				}
 			}
 		}
@@ -268,9 +272,13 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		$files = glob( $plugin_path . '/*.php' );
 		if ( is_array( $files ) ) {
 			foreach ( $files as $file ) {
-				$file_content = file_get_contents( $file );
-				if ( false !== $file_content && preg_match( '/^\s*\*\s*Version:\s*(.+)$/mi', $file_content, $matches ) ) {
-					return trim( $matches[1] );
+				// Check file size to prevent memory exhaustion (limit to 1MB)
+				$file_size = filesize( $file );
+				if ( false !== $file_size && $file_size < 1048576 && is_readable( $file ) ) {
+					$file_content = file_get_contents( $file );
+					if ( false !== $file_content && preg_match( '/^\s*\*\s*Version:\s*(.+)$/mi', $file_content, $matches ) ) {
+						return trim( $matches[1] );
+					}
 				}
 			}
 		}
@@ -296,9 +304,9 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 		// Also scan the filesystem for plugin directories
 		$plugin_dir = WP_PLUGIN_DIR;
-		if ( is_dir( $plugin_dir ) ) {
-			$dirs = scandir( $plugin_dir );
-			if ( false !== $dirs ) {
+		if ( is_dir( $plugin_dir ) && is_readable( $plugin_dir ) ) {
+			$dirs = @scandir( $plugin_dir ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+			if ( false !== $dirs && is_array( $dirs ) ) {
 				foreach ( $dirs as $dir ) {
 					// Skip special directories and files
 					if ( '.' === $dir || '..' === $dir ) {
@@ -306,8 +314,8 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 					}
 
 					$full_path = $plugin_dir . '/' . $dir;
-					// Only include directories, not single-file plugins
-					if ( is_dir( $full_path ) && ! in_array( $dir, $names, true ) ) {
+					// Only include real directories, not symlinks or files
+					if ( is_dir( $full_path ) && ! is_link( $full_path ) && ! in_array( $dir, $names, true ) ) {
 						$names[] = $dir;
 					}
 				}
