@@ -13,6 +13,12 @@ use WP_CLI\WpOrgApi;
 class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 	/**
+	 * Maximum file size (in bytes) to read when detecting plugin version.
+	 * Set to 1MB to prevent memory exhaustion attacks.
+	 */
+	const MAX_FILE_SIZE_FOR_VERSION_DETECTION = 1048576;
+
+	/**
 	 * Cached plugin data for all installed plugins.
 	 *
 	 * @var array|null
@@ -105,6 +111,12 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			if ( 'hello' === $plugin->name ) {
 				$this->verify_hello_dolly_from_core( $assoc_args );
 				continue;
+			}
+
+			// Check if the main plugin file exists
+			$main_file_path = WP_PLUGIN_DIR . '/' . $plugin->file;
+			if ( ! file_exists( $main_file_path ) ) {
+				WP_CLI::warning( "Plugin {$plugin->name} main file is missing: {$plugin->file}" );
 			}
 
 			if ( false === $version ) {
@@ -222,24 +234,102 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		}
 
 		if ( ! array_key_exists( $path, $this->plugins_data ) ) {
-			return false;
+			// Try to detect version from any PHP file in the plugin directory
+			return $this->detect_version_from_directory( dirname( $path ) );
 		}
 
 		return $this->plugins_data[ $path ]['Version'];
 	}
 
 	/**
+	 * Attempts to detect plugin version from any PHP file in the plugin directory.
+	 *
+	 * This is used as a fallback when the main plugin file is missing or has no valid headers.
+	 *
+	 * @param string $plugin_dir Plugin directory name (relative to WP_PLUGIN_DIR).
+	 *
+	 * @return string|false Detected version, or false if not found.
+	 */
+	private function detect_version_from_directory( $plugin_dir ) {
+		$plugin_path = WP_PLUGIN_DIR . '/' . $plugin_dir;
+
+		// If it's not a directory (single-file plugin), we can't detect version
+		if ( ! is_dir( $plugin_path ) ) {
+			return false;
+		}
+
+		// Look for version in readme.txt first, as it's commonly accurate
+		$readme_file = $plugin_path . '/readme.txt';
+		if ( file_exists( $readme_file ) && is_readable( $readme_file ) ) {
+			// Check file size to prevent memory exhaustion
+			$file_size = filesize( $readme_file );
+			if ( false !== $file_size && $file_size < self::MAX_FILE_SIZE_FOR_VERSION_DETECTION ) {
+				$readme_content = @file_get_contents( $readme_file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+				if ( false !== $readme_content && preg_match( '/^Stable tag:\s*(.+)$/mi', $readme_content, $matches ) ) {
+					$version = trim( $matches[1] );
+					if ( 'trunk' !== strtolower( $version ) ) {
+						return $version;
+					}
+				}
+			}
+		}
+
+		// If not found in readme, try scanning PHP files for Version header
+		$files = glob( $plugin_path . '/*.php' );
+		if ( is_array( $files ) && ! empty( $files ) ) {
+			foreach ( $files as $file ) {
+				// Check file size to prevent memory exhaustion
+				$file_size = filesize( $file );
+				if ( false !== $file_size && $file_size < self::MAX_FILE_SIZE_FOR_VERSION_DETECTION && is_readable( $file ) ) {
+					$file_content = @file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+					if ( false !== $file_content && preg_match( '/^\s*\*\s*Version:\s*(.+)$/mi', $file_content, $matches ) ) {
+						return trim( $matches[1] );
+					}
+				}
+			}
+		}
+		// If glob() failed (returns false), version will just not be detected from PHP files
+
+		return false;
+	}
+
+	/**
 	 * Gets the names of all installed plugins.
+	 *
+	 * Includes both plugins detected by get_plugins() and plugin directories
+	 * that exist on the filesystem but may not have valid headers.
 	 *
 	 * @return array<string> Names of all installed plugins.
 	 */
 	private function get_all_plugin_names() {
 		$names = array();
+
+		// Get plugins from get_plugins() (those with valid headers)
 		foreach ( get_plugins() as $file => $details ) {
 			$names[] = Utils\get_plugin_name( $file );
 		}
 
-		return $names;
+		// Also scan the filesystem for plugin directories
+		$plugin_dir = WP_PLUGIN_DIR;
+		if ( is_dir( $plugin_dir ) && is_readable( $plugin_dir ) ) {
+			$dirs = @scandir( $plugin_dir ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+			if ( false !== $dirs ) {
+				foreach ( $dirs as $dir ) {
+					// Skip special directories and files
+					if ( '.' === $dir || '..' === $dir ) {
+						continue;
+					}
+
+					$full_path = $plugin_dir . '/' . $dir;
+					// Only include real directories, not symlinks or files
+					if ( is_dir( $full_path ) && ! is_link( $full_path ) && ! in_array( $dir, $names, true ) ) {
+						$names[] = $dir;
+					}
+				}
+			}
+		}
+
+		return array_unique( $names );
 	}
 
 	/**
