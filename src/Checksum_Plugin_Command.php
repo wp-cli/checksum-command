@@ -13,12 +13,6 @@ use WP_CLI\WpOrgApi;
 class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 	/**
-	 * Maximum file size (in bytes) to read when detecting plugin version.
-	 * Set to 1MB to prevent memory exhaustion attacks.
-	 */
-	const MAX_FILE_SIZE_FOR_VERSION_DETECTION = 1048576;
-
-	/**
 	 * Cached plugin data for all installed plugins.
 	 *
 	 * @var array|null
@@ -262,9 +256,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		$files = glob( $plugin_path . '/*.php' );
 		if ( is_array( $files ) && ! empty( $files ) ) {
 			foreach ( $files as $file ) {
-				// Check file size to prevent memory exhaustion
-				$file_size = filesize( $file );
-				if ( false !== $file_size && $file_size < self::MAX_FILE_SIZE_FOR_VERSION_DETECTION && is_readable( $file ) ) {
+				if ( is_readable( $file ) ) {
 					$file_data = get_file_data(
 						$file,
 						array( 'Version' => 'Version' )
