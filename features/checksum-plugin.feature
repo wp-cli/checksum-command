@@ -204,3 +204,37 @@ Feature: Validate checksums for WordPress plugins
       """
       Verified 1 of 1 plugins.
       """
+
+  Scenario: Verifies plugin directory when main file is missing
+    Given a WP install
+
+    When I run `wp plugin install duplicate-post --version=3.2.1`
+    Then STDOUT should not be empty
+    And STDERR should be empty
+
+    When I run `mv wp-content/plugins/duplicate-post/duplicate-post.php wp-content/plugins/duplicate-post/duplicate-post.php.renamed`
+    Then STDERR should be empty
+
+    When I try `wp plugin verify-checksums duplicate-post --format=json`
+    Then STDOUT should contain:
+      """
+      "plugin_name":"duplicate-post","file":"duplicate-post.php.renamed","message":"File was added"
+      """
+    And STDERR should contain:
+      """
+      Warning: Plugin duplicate-post main file is missing: duplicate-post/duplicate-post.php
+      """
+    And STDERR should contain:
+      """
+      Error: No plugins verified (1 failed).
+      """
+
+    When I try `wp plugin verify-checksums --all --format=json`
+    Then STDOUT should contain:
+      """
+      "plugin_name":"duplicate-post"
+      """
+    And STDERR should contain:
+      """
+      Warning: Plugin duplicate-post main file is missing: duplicate-post/duplicate-post.php
+      """
