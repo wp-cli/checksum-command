@@ -215,7 +215,7 @@ Feature: Validate checksums for WordPress plugins
     When I run `mv wp-content/plugins/duplicate-post/duplicate-post.php wp-content/plugins/duplicate-post/duplicate-post.php.renamed`
     Then STDERR should be empty
 
-    When I try `wp plugin verify-checksums duplicate-post --format=json`
+    When I try `wp plugin verify-checksums duplicate-post --version=3.2.1 --format=json`
     Then STDOUT should contain:
       """
       "plugin_name":"duplicate-post","file":"duplicate-post.php.renamed","message":"File was added"

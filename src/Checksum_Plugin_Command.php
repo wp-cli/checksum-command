@@ -253,15 +253,8 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		}
 
 		// Try scanning PHP files for Version header using WordPress's get_file_data()
-		// Include both .php files and renamed .php.* files (e.g., .php.bak, .php.renamed)
-		$php_files = glob( $plugin_path . '/*.php' );
-		$renamed_files = glob( $plugin_path . '/*.php.*' );
-		$files = array_merge(
-			is_array( $php_files ) ? $php_files : array(),
-			is_array( $renamed_files ) ? $renamed_files : array()
-		);
-
-		if ( ! empty( $files ) ) {
+		$files = glob( $plugin_path . '/*.php' );
+		if ( is_array( $files ) && ! empty( $files ) ) {
 			foreach ( $files as $file ) {
 				if ( is_readable( $file ) ) {
 					$file_data = get_file_data(
@@ -274,6 +267,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 				}
 			}
 		}
+		// If glob() failed (returns false), version will just not be detected from PHP files
 
 		return false;
 	}
