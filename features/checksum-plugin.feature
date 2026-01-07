@@ -204,3 +204,78 @@ Feature: Validate checksums for WordPress plugins
       """
       Verified 1 of 1 plugins.
       """
+
+  Scenario: Verify must-use plugin that is a standard plugin moved to mu-plugins
+    Given a WP install
+
+    When I run `wp plugin install duplicate-post --version=3.2.1`
+    Then STDOUT should not be empty
+
+    # Move duplicate-post to mu-plugins folder
+    When I run `mv wp-content/plugins/duplicate-post wp-content/mu-plugins/`
+    Then STDERR should be empty
+
+    When I run `wp plugin verify-checksums --all`
+    Then STDOUT should contain:
+      """
+      Verified 1 of 1 plugins.
+      """
+
+  Scenario: Exclude must-use plugins from verification
+    Given a WP install
+
+    When I run `wp plugin install duplicate-post --version=3.2.1`
+    Then STDOUT should not be empty
+
+    # Move duplicate-post to mu-plugins folder
+    When I run `mv wp-content/plugins/duplicate-post wp-content/mu-plugins/`
+    Then STDERR should be empty
+
+    When I run `wp plugin verify-checksums --all --exclude-mu-plugins`
+    Then STDOUT should contain:
+      """
+      Verified 0 of 0 plugins.
+      """
+
+  Scenario: Modified must-use plugin doesn't verify
+    Given a WP install
+
+    When I run `wp plugin install duplicate-post --version=3.2.1`
+    Then STDOUT should not be empty
+
+    # Move duplicate-post to mu-plugins folder
+    When I run `mv wp-content/plugins/duplicate-post wp-content/mu-plugins/`
+    Then STDERR should be empty
+
+    Given "Duplicate Post" replaced with "Different Name" in the wp-content/mu-plugins/duplicate-post/duplicate-post.php file
+
+    When I try `wp plugin verify-checksums --all --format=json`
+    Then STDOUT should contain:
+      """
+      "plugin_name":"duplicate-post","file":"duplicate-post.php","message":"Checksum does not match"
+      """
+    And STDERR should contain:
+      """
+      Error: No plugins verified (1 failed).
+      """
+
+  Scenario: Single-file must-use plugin without checksums shows warning
+    Given a WP install
+    And a wp-content/mu-plugins/custom-mu-plugin.php file:
+      """
+      <?php
+      /**
+       * Plugin Name: Custom MU Plugin
+       * Version: 1.0.0
+       */
+      """
+
+    When I run `wp plugin verify-checksums --all 2>&1`
+    Then STDOUT should contain:
+      """
+      Warning: Must-use plugin 'custom-mu-plugin.php' appears to be a custom file or loader plugin and cannot be verified.
+      """
+    And STDOUT should contain:
+      """
+      Verified 0 of 1 plugins (1 skipped).
+      """

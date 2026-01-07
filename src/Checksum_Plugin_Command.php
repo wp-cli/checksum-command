@@ -62,6 +62,9 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 * [--exclude=<name>]
 	 * : Comma separated list of plugin names that should be excluded from verifying.
 	 *
+	 * [--exclude-mu-plugins]
+	 * : Exclude must-use plugins from verification.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Verify the checksums of all installed plugins
@@ -74,11 +77,12 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 */
 	public function __invoke( $args, $assoc_args ) {
 
-		$fetcher  = new Fetchers\UnfilteredPlugin();
-		$all      = Utils\get_flag_value( $assoc_args, 'all', false );
-		$strict   = Utils\get_flag_value( $assoc_args, 'strict', false );
-		$insecure = Utils\get_flag_value( $assoc_args, 'insecure', false );
-		$plugins  = $fetcher->get_many( $all ? $this->get_all_plugin_names() : $args );
+		$fetcher    = new Fetchers\UnfilteredPlugin();
+		$all        = Utils\get_flag_value( $assoc_args, 'all', false );
+		$strict     = Utils\get_flag_value( $assoc_args, 'strict', false );
+		$insecure   = Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$exclude_mu = Utils\get_flag_value( $assoc_args, 'exclude-mu-plugins', false );
+		$plugins    = $fetcher->get_many( $all ? $this->get_all_plugin_names() : $args );
 
 		/**
 		 * @var string $exclude
@@ -149,6 +153,22 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			}
 		}
 
+		// Process must-use plugins if not excluded.
+		if ( ! $exclude_mu ) {
+			$mu_plugins = $this->get_mu_plugin_list();
+
+			foreach ( $mu_plugins as $mu_file => $mu_plugin ) {
+				$plugin_name = $this->get_plugin_slug_from_header( $mu_file, $mu_plugin );
+
+				if ( in_array( $plugin_name, $exclude_list, true ) ) {
+					++$skips;
+					continue;
+				}
+
+				$this->verify_mu_plugin( $mu_file, $mu_plugin, $plugin_name, $version_arg, $insecure, $strict, $skips );
+			}
+		}
+
 		if ( ! empty( $this->errors ) ) {
 			$formatter = new Formatter(
 				$assoc_args,
@@ -157,7 +177,13 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			$formatter->display_items( $this->errors );
 		}
 
-		$total     = count( $plugins );
+		$mu_plugin_count = 0;
+		if ( ! $exclude_mu ) {
+			$mu_plugins      = $this->get_mu_plugin_list();
+			$mu_plugin_count = count( $mu_plugins );
+		}
+
+		$total     = count( $plugins ) + $mu_plugin_count;
 		$failures  = count( array_unique( array_column( $this->errors, 'plugin_name' ) ) );
 		$successes = $total - $failures - $skips;
 
@@ -360,5 +386,138 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 */
 	private function is_soft_change_file( $file ) {
 		return in_array( strtolower( $file ), $this->get_soft_change_files(), true );
+	}
+
+	/**
+	 * Gets the list of all must-use plugins.
+	 *
+	 * @return array Array of MU plugins with their file path as key.
+	 */
+	private function get_mu_plugin_list() {
+		if ( ! function_exists( 'get_mu_plugins' ) ) {
+			return array();
+		}
+
+		return get_mu_plugins();
+	}
+
+	/**
+	 * Extracts the plugin slug from the plugin header data.
+	 *
+	 * For MU plugins that are actually standard plugins moved to mu-plugins folder,
+	 * we try to extract the plugin slug to look up checksums.
+	 *
+	 * @param string $mu_file   Path to the MU plugin file.
+	 * @param array  $mu_plugin Plugin header data.
+	 *
+	 * @return string Plugin slug.
+	 */
+	private function get_plugin_slug_from_header( $mu_file, $mu_plugin ) {
+		// If it's in a subdirectory, use the directory name as slug.
+		if ( false !== strpos( $mu_file, '/' ) ) {
+			return dirname( $mu_file );
+		}
+
+		// For single files, extract the slug from the filename.
+		return basename( $mu_file, '.php' );
+	}
+
+	/**
+	 * Verifies a must-use plugin against WordPress.org checksums.
+	 *
+	 * @param string $mu_file     Path to the MU plugin file.
+	 * @param array  $mu_plugin   Plugin header data.
+	 * @param string $plugin_name Plugin slug/name.
+	 * @param string $version_arg Version to verify against (if specified).
+	 * @param bool   $insecure    Whether to allow insecure connections.
+	 * @param bool   $strict      Whether to check soft change files.
+	 * @param int    &$skips      Reference to skip counter.
+	 */
+	private function verify_mu_plugin( $mu_file, $mu_plugin, $plugin_name, $version_arg, $insecure, $strict, &$skips ) {
+		$is_single_file = false === strpos( $mu_file, '/' );
+
+		// Get version from the plugin header.
+		$version = '';
+		if ( ! empty( $version_arg ) ) {
+			$version = $version_arg;
+		} elseif ( ! empty( $mu_plugin['Version'] ) ) {
+			$version = $mu_plugin['Version'];
+		}
+
+		if ( empty( $version ) ) {
+			WP_CLI::warning( "Could not retrieve the version for must-use plugin {$plugin_name}, skipping." );
+			++$skips;
+			return;
+		}
+
+		$wp_org_api = new WpOrgApi( [ 'insecure' => $insecure ] );
+
+		try {
+			/**
+			 * @var array|false $checksums
+			 */
+			$checksums = $wp_org_api->get_plugin_checksums( $plugin_name, $version );
+		} catch ( Exception $exception ) {
+			// If it's a single file or we can't get checksums, warn the user.
+			if ( $is_single_file ) {
+				WP_CLI::warning( "Must-use plugin '{$mu_file}' appears to be a custom file or loader plugin and cannot be verified." );
+			} else {
+				WP_CLI::warning( $exception->getMessage() );
+			}
+			++$skips;
+			return;
+		}
+
+		if ( false === $checksums ) {
+			if ( $is_single_file ) {
+				WP_CLI::warning( "Must-use plugin '{$mu_file}' appears to be a custom file or loader plugin and cannot be verified." );
+			} else {
+				WP_CLI::warning( "Could not retrieve the checksums for version {$version} of must-use plugin {$plugin_name}, skipping." );
+			}
+			++$skips;
+			return;
+		}
+
+		$files = $this->get_mu_plugin_files( $mu_file );
+
+		foreach ( $files as $file ) {
+			if ( ! array_key_exists( $file, $checksums ) ) {
+				$this->add_error( $plugin_name, $file, 'File was added' );
+				continue;
+			}
+
+			if ( ! $strict && $this->is_soft_change_file( $file ) ) {
+				continue;
+			}
+
+			$absolute_path = WPMU_PLUGIN_DIR . '/' . dirname( $mu_file ) . '/' . $file;
+			if ( false === strpos( $mu_file, '/' ) ) {
+				// Single file plugin.
+				$absolute_path = WPMU_PLUGIN_DIR . '/' . $file;
+			}
+
+			$result = $this->check_file_checksum( $absolute_path, $checksums[ $file ] );
+			if ( true !== $result ) {
+				$this->add_error( $plugin_name, $file, is_string( $result ) ? $result : 'Checksum does not match' );
+			}
+		}
+	}
+
+	/**
+	 * Gets the list of files that are part of the given MU plugin.
+	 *
+	 * @param string $mu_file Path to the main MU plugin file.
+	 *
+	 * @return array<string> Array of files with their relative paths.
+	 */
+	private function get_mu_plugin_files( $mu_file ) {
+		// If it's a single file in the root of mu-plugins, return just that file.
+		if ( false === strpos( $mu_file, '/' ) ) {
+			return (array) basename( $mu_file );
+		}
+
+		// If it's in a subdirectory, get all files in that directory.
+		$folder = WPMU_PLUGIN_DIR . '/' . dirname( $mu_file );
+		return $this->get_files( trailingslashit( $folder ) );
 	}
 }
