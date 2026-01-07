@@ -154,6 +154,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		}
 
 		// Process must-use plugins if not excluded.
+		$mu_plugins = array();
 		if ( ! $exclude_mu ) {
 			$mu_plugins = $this->get_mu_plugin_list();
 
@@ -177,13 +178,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			$formatter->display_items( $this->errors );
 		}
 
-		$mu_plugin_count = 0;
-		if ( ! $exclude_mu ) {
-			$mu_plugins      = $this->get_mu_plugin_list();
-			$mu_plugin_count = count( $mu_plugins );
-		}
-
-		$total     = count( $plugins ) + $mu_plugin_count;
+		$total     = count( $plugins ) + count( $mu_plugins );
 		$failures  = count( array_unique( array_column( $this->errors, 'plugin_name' ) ) );
 		$successes = $total - $failures - $skips;
 
@@ -490,11 +485,9 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 				continue;
 			}
 
-			$absolute_path = WPMU_PLUGIN_DIR . '/' . dirname( $mu_file ) . '/' . $file;
-			if ( false === strpos( $mu_file, '/' ) ) {
-				// Single file plugin.
-				$absolute_path = WPMU_PLUGIN_DIR . '/' . $file;
-			}
+			$absolute_path = $is_single_file
+				? WPMU_PLUGIN_DIR . '/' . $file
+				: WPMU_PLUGIN_DIR . '/' . dirname( $mu_file ) . '/' . $file;
 
 			$result = $this->check_file_checksum( $absolute_path, $checksums[ $file ] );
 			if ( true !== $result ) {
