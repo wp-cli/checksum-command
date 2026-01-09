@@ -156,10 +156,10 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		// Process must-use plugins if not excluded.
 		$mu_plugins = array();
 		if ( ! $exclude_mu ) {
-			$mu_plugins = $this->get_mu_plugin_list();
+			$mu_plugins = get_mu_plugins();
 
 			foreach ( $mu_plugins as $mu_file => $mu_plugin ) {
-				$plugin_name = $this->get_plugin_slug_from_header( $mu_file, $mu_plugin );
+				$plugin_name = $this->get_plugin_slug_from_path( $mu_file );
 
 				if ( in_array( $plugin_name, $exclude_list, true ) ) {
 					++$skips;
@@ -310,6 +310,33 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	}
 
 	/**
+	 * Checks the integrity of a single MU plugin file by comparing it to the
+	 * officially provided checksum.
+	 *
+	 * @param string $path      Relative path to the MU plugin file to check the
+	 *                          integrity of.
+	 * @param array  $checksums Array of provided checksums to compare against.
+	 *
+	 * @return bool|string
+	 */
+	private function check_mu_file_checksum( $path, $checksums ) {
+		if ( $this->supports_sha256()
+			&& array_key_exists( 'sha256', $checksums )
+		) {
+			$sha256 = $this->get_sha256( WPMU_PLUGIN_DIR . '/' . $path );
+			return in_array( $sha256, (array) $checksums['sha256'], true );
+		}
+
+		if ( ! array_key_exists( 'md5', $checksums ) ) {
+			return 'No matching checksum algorithm found';
+		}
+
+		$md5 = $this->get_md5( WPMU_PLUGIN_DIR . '/' . $path );
+
+		return in_array( $md5, (array) $checksums['md5'], true );
+	}
+
+	/**
 	 * Checks whether the current environment supports 256-bit SHA-2.
 	 *
 	 * Should be supported for PHP 5+, but we might find edge cases depending on
@@ -384,37 +411,43 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	}
 
 	/**
-	 * Gets the list of all must-use plugins.
-	 *
-	 * @return array Array of MU plugins with their file path as key.
-	 */
-	private function get_mu_plugin_list() {
-		if ( ! function_exists( 'get_mu_plugins' ) ) {
-			return array();
-		}
-
-		return get_mu_plugins();
-	}
-
-	/**
-	 * Extracts the plugin slug from the plugin header data.
+	 * Extracts the plugin slug from the plugin file path.
 	 *
 	 * For MU plugins that are actually standard plugins moved to mu-plugins folder,
-	 * we try to extract the plugin slug to look up checksums.
+	 * we extract the plugin slug from the file path to look up checksums.
 	 *
-	 * @param string $mu_file   Path to the MU plugin file.
-	 * @param array  $mu_plugin Plugin header data.
+	 * @param string $plugin_file Path to the plugin file.
 	 *
 	 * @return string Plugin slug.
 	 */
-	private function get_plugin_slug_from_header( $mu_file, $mu_plugin ) {
+	private function get_plugin_slug_from_path( $plugin_file ) {
 		// If it's in a subdirectory, use the directory name as slug.
-		if ( false !== strpos( $mu_file, '/' ) ) {
-			return dirname( $mu_file );
+		if ( false !== strpos( $plugin_file, '/' ) ) {
+			return dirname( $plugin_file );
 		}
 
 		// For single files, extract the slug from the filename.
-		return basename( $mu_file, '.php' );
+		return basename( $plugin_file, '.php' );
+	}
+
+	/**
+	 * Gets the version for a plugin from its header data or the version argument.
+	 *
+	 * @param string $version_arg Version argument from command line.
+	 * @param array  $plugin_data Plugin header data.
+	 *
+	 * @return string|false Plugin version, or false if not found.
+	 */
+	private function get_plugin_version_for_verification( $version_arg, $plugin_data ) {
+		if ( ! empty( $version_arg ) ) {
+			return $version_arg;
+		}
+
+		if ( ! empty( $plugin_data['Version'] ) ) {
+			return $plugin_data['Version'];
+		}
+
+		return false;
 	}
 
 	/**
@@ -432,14 +465,9 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		$is_single_file = false === strpos( $mu_file, '/' );
 
 		// Get version from the plugin header.
-		$version = '';
-		if ( ! empty( $version_arg ) ) {
-			$version = $version_arg;
-		} elseif ( ! empty( $mu_plugin['Version'] ) ) {
-			$version = $mu_plugin['Version'];
-		}
+		$version = $this->get_plugin_version_for_verification( $version_arg, $mu_plugin );
 
-		if ( empty( $version ) ) {
+		if ( false === $version ) {
 			WP_CLI::warning( "Could not retrieve the version for must-use plugin {$plugin_name}, skipping." );
 			++$skips;
 			return;
@@ -485,11 +513,10 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 				continue;
 			}
 
-			$absolute_path = $is_single_file
-				? WPMU_PLUGIN_DIR . '/' . $file
-				: WPMU_PLUGIN_DIR . '/' . dirname( $mu_file ) . '/' . $file;
+			// Build the relative path for MU plugins.
+			$relative_path = $is_single_file ? $file : dirname( $mu_file ) . '/' . $file;
 
-			$result = $this->check_file_checksum( $absolute_path, $checksums[ $file ] );
+			$result = $this->check_mu_file_checksum( $relative_path, $checksums[ $file ] );
 			if ( true !== $result ) {
 				$this->add_error( $plugin_name, $file, is_string( $result ) ? $result : 'Checksum does not match' );
 			}
