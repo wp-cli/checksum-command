@@ -289,14 +289,15 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 * @param string $path      Relative path to the plugin file to check the
 	 *                          integrity of.
 	 * @param array  $checksums Array of provided checksums to compare against.
+	 * @param string $base_dir  Optional. Base directory for the plugin. Defaults to WP_PLUGIN_DIR.
 	 *
 	 * @return bool|string
 	 */
-	private function check_file_checksum( $path, $checksums ) {
+	private function check_file_checksum( $path, $checksums, $base_dir = null ) {
 		if ( $this->supports_sha256()
 			&& array_key_exists( 'sha256', $checksums )
 		) {
-			$sha256 = $this->get_sha256( $this->get_absolute_path( $path ) );
+			$sha256 = $this->get_sha256( $this->get_absolute_path( $path, $base_dir ) );
 			return in_array( $sha256, (array) $checksums['sha256'], true );
 		}
 
@@ -304,34 +305,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			return 'No matching checksum algorithm found';
 		}
 
-		$md5 = $this->get_md5( $this->get_absolute_path( $path ) );
-
-		return in_array( $md5, (array) $checksums['md5'], true );
-	}
-
-	/**
-	 * Checks the integrity of a single MU plugin file by comparing it to the
-	 * officially provided checksum.
-	 *
-	 * @param string $path      Relative path to the MU plugin file to check the
-	 *                          integrity of.
-	 * @param array  $checksums Array of provided checksums to compare against.
-	 *
-	 * @return bool|string
-	 */
-	private function check_mu_file_checksum( $path, $checksums ) {
-		if ( $this->supports_sha256()
-			&& array_key_exists( 'sha256', $checksums )
-		) {
-			$sha256 = $this->get_sha256( WPMU_PLUGIN_DIR . '/' . $path );
-			return in_array( $sha256, (array) $checksums['sha256'], true );
-		}
-
-		if ( ! array_key_exists( 'md5', $checksums ) ) {
-			return 'No matching checksum algorithm found';
-		}
-
-		$md5 = $this->get_md5( WPMU_PLUGIN_DIR . '/' . $path );
+		$md5 = $this->get_md5( $this->get_absolute_path( $path, $base_dir ) );
 
 		return in_array( $md5, (array) $checksums['md5'], true );
 	}
@@ -375,12 +349,16 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	/**
 	 * Gets the absolute path to a relative plugin file.
 	 *
-	 * @param string $path Relative path to get the absolute path for.
+	 * @param string $path     Relative path to get the absolute path for.
+	 * @param string $base_dir Optional. Base directory to prepend. Defaults to WP_PLUGIN_DIR.
 	 *
 	 * @return string
 	 */
-	private function get_absolute_path( $path ) {
-		return WP_PLUGIN_DIR . '/' . $path;
+	private function get_absolute_path( $path, $base_dir = null ) {
+		if ( null === $base_dir ) {
+			$base_dir = WP_PLUGIN_DIR;
+		}
+		return $base_dir . '/' . $path;
 	}
 
 	/**
@@ -516,7 +494,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			// Build the relative path for MU plugins.
 			$relative_path = $is_single_file ? $file : dirname( $mu_file ) . '/' . $file;
 
-			$result = $this->check_mu_file_checksum( $relative_path, $checksums[ $file ] );
+			$result = $this->check_file_checksum( $relative_path, $checksums[ $file ], WPMU_PLUGIN_DIR );
 			if ( true !== $result ) {
 				$this->add_error( $plugin_name, $file, is_string( $result ) ? $result : 'Checksum does not match' );
 			}
