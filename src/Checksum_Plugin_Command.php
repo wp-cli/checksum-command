@@ -504,7 +504,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	private function get_mu_plugin_files( $mu_file ) {
 		// If it's a single file in the root of mu-plugins, return just that file.
 		if ( false === strpos( $mu_file, '/' ) ) {
-			return array( basename( $mu_file ) );
+			return array( $mu_file );
 		}
 
 		// If it's in a subdirectory, get all files in that directory.
