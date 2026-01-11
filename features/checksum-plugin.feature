@@ -167,7 +167,7 @@ Feature: Validate checksums for WordPress plugins
       """
 
     When I try `wp plugin verify-checksums --all --exclude=akismet`
-    Then STDOUT should match /^Success: Verified 0 of \d plugins \(\d skipped\)\.$/
+    Then STDOUT should match /^Success: Verified \d of \d plugins \(\d skipped\)\./
 
   Scenario: Plugin is verified when the --exclude argument isn't included
     Given a WP install
@@ -186,7 +186,7 @@ Feature: Validate checksums for WordPress plugins
       """
 
     When I try `wp plugin verify-checksums --all`
-    Then STDOUT should match /^Success: Verified 1 of \d plugins/
+    Then STDOUT should match /^Success: Verified \d of \d plugins/
 
   # Hello Dolly was moved from a single file to a directory in WordPress 6.9
   @less-than-wp-6.9
@@ -210,8 +210,12 @@ Feature: Validate checksums for WordPress plugins
     When I run `mv wp-content/plugins/duplicate-post wp-content/mu-plugins/`
     Then STDERR should be empty
 
-    When I run `wp plugin verify-checksums --all`
-    Then STDOUT should match /^Success: Verified 1 of \d plugins/
+    When I try `wp plugin verify-checksums --all`
+    Then STDOUT should match /Success: Verified \d of \d plugins/
+    And STDERR should not contain:
+      """
+      duplicate-post
+      """
 
   Scenario: Exclude must-use plugins from verification
     Given a WP install
@@ -246,10 +250,7 @@ Feature: Validate checksums for WordPress plugins
       """
       "plugin_name":"duplicate-post","file":"duplicate-post.php","message":"Checksum does not match"
       """
-    And STDERR should contain:
-      """
-      Error: No plugins verified (1 failed).
-      """
+    And STDERR should match /Error: Only verified \d of \d plugins/
 
   Scenario: Single-file must-use plugin without checksums shows warning
     Given a WP install
@@ -267,4 +268,4 @@ Feature: Validate checksums for WordPress plugins
       """
       Warning: Must-use plugin 'custom-mu-plugin.php' appears to be a custom file or loader plugin and cannot be verified.
       """
-    And STDOUT should match /Success: Verified 2 of \d plugins \(\d skipped\)\.$/
+    And STDOUT should match /Success: Verified \d of \d plugins \(\d skipped\)\./

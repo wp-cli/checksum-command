@@ -83,6 +83,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		$insecure   = Utils\get_flag_value( $assoc_args, 'insecure', false );
 		$exclude_mu = Utils\get_flag_value( $assoc_args, 'exclude-mu-plugins', false );
 		$plugins    = $fetcher->get_many( $all ? $this->get_all_plugin_names() : $args );
+		$mu_plugins = ! $exclude_mu ? array_merge( get_mu_plugins(), get_plugins( '/../' . basename( WPMU_PLUGIN_DIR ) ) ) : [];
 
 		/**
 		 * @var string $exclude
@@ -155,29 +156,23 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 		$total = count( $plugins );
 
-		// Process must-use plugins if not excluded.
-		$mu_plugins = array();
-		if ( ! $exclude_mu ) {
-			$mu_plugins = get_plugins( '/../mu-plugins' );
+		foreach ( $mu_plugins as $mu_file => $mu_plugin ) {
+			$plugin_name = $this->get_plugin_slug_from_path( $mu_file );
 
-			foreach ( $mu_plugins as $mu_file => $mu_plugin ) {
-				$plugin_name = $this->get_plugin_slug_from_path( $mu_file );
-
-				if ( ! empty( $args ) ) {
-					if ( ! in_array( $plugin_name, $args, true ) ) {
-						continue;
-					} else {
-						++$total;
-					}
-				}
-
-				if ( in_array( $plugin_name, $exclude_list, true ) ) {
-					++$skips;
+			if ( ! empty( $args ) ) {
+				if ( ! in_array( $plugin_name, $args, true ) ) {
 					continue;
+				} else {
+					++$total;
 				}
-
-				$this->verify_mu_plugin( $mu_file, $mu_plugin, $plugin_name, $version_arg, $insecure, $strict, $skips );
 			}
+
+			if ( in_array( $plugin_name, $exclude_list, true ) ) {
+				++$skips;
+				continue;
+			}
+
+			$this->verify_mu_plugin( $mu_file, $mu_plugin, $plugin_name, $version_arg, $insecure, $strict, $skips );
 		}
 
 		if ( ! empty( $this->errors ) ) {
