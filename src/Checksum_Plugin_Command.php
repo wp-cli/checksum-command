@@ -153,6 +153,8 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			}
 		}
 
+		$total = count( $plugins );
+
 		// Process must-use plugins if not excluded.
 		$mu_plugins = array();
 		if ( ! $exclude_mu ) {
@@ -160,6 +162,14 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 			foreach ( $mu_plugins as $mu_file => $mu_plugin ) {
 				$plugin_name = $this->get_plugin_slug_from_path( $mu_file );
+
+				if ( ! empty( $args ) ) {
+					if ( ! in_array( $plugin_name, $args, true ) ) {
+						continue;
+					} else {
+						++$total;
+					}
+				}
 
 				if ( in_array( $plugin_name, $exclude_list, true ) ) {
 					++$skips;
@@ -178,7 +188,10 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			$formatter->display_items( $this->errors );
 		}
 
-		$total     = count( $plugins ) + count( $mu_plugins );
+		if ( $all ) {
+			$total += count( $mu_plugins );
+		}
+
 		$failures  = count( array_unique( array_column( $this->errors, 'plugin_name' ) ) );
 		$successes = $total - $failures - $skips;
 
