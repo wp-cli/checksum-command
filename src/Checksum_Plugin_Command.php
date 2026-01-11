@@ -458,22 +458,15 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			 * @var array|false $checksums
 			 */
 			$checksums = $wp_org_api->get_plugin_checksums( $plugin_name, $version );
+			if ( false === $checksums ) {
+				throw new Exception( "Could not retrieve the checksums for version {$version} of must-use plugin {$plugin_name}, skipping." );
+			}
 		} catch ( Exception $exception ) {
 			// If it's a single file or we can't get checksums, warn the user.
 			if ( $is_single_file ) {
 				WP_CLI::warning( "Must-use plugin '{$mu_file}' appears to be a custom file or loader plugin and cannot be verified." );
 			} else {
 				WP_CLI::warning( $exception->getMessage() );
-			}
-			++$skips;
-			return;
-		}
-
-		if ( false === $checksums ) {
-			if ( $is_single_file ) {
-				WP_CLI::warning( "Must-use plugin '{$mu_file}' appears to be a custom file or loader plugin and cannot be verified." );
-			} else {
-				WP_CLI::warning( "Could not retrieve the checksums for version {$version} of must-use plugin {$plugin_name}, skipping." );
 			}
 			++$skips;
 			return;
