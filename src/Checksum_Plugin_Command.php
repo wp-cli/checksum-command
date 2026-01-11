@@ -158,7 +158,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		// Process must-use plugins if not excluded.
 		$mu_plugins = array();
 		if ( ! $exclude_mu ) {
-			$mu_plugins = get_mu_plugins();
+			$mu_plugins = get_plugins( '/../mu-plugins' );
 
 			foreach ( $mu_plugins as $mu_file => $mu_plugin ) {
 				$plugin_name = $this->get_plugin_slug_from_path( $mu_file );
