@@ -37,7 +37,18 @@ class UnfilteredPlugin extends Base {
 		// If not found, check if a directory with this name exists
 		// This handles cases where the main plugin file is missing
 		$plugin_dir = WP_PLUGIN_DIR . '/' . $name;
-		if ( is_dir( $plugin_dir ) ) {
+
+		// Resolve real paths to protect against path traversal and symlinks.
+		$wp_plugin_dir_real = realpath( WP_PLUGIN_DIR );
+		$plugin_dir_real    = realpath( $plugin_dir );
+
+		if ( false !== $wp_plugin_dir_real
+			&& false !== $plugin_dir_real
+			&& is_dir( $plugin_dir_real )
+			&& ! is_link( $plugin_dir_real )
+			&& ( $plugin_dir_real === $wp_plugin_dir_real
+				|| 0 === strpos( $plugin_dir_real, $wp_plugin_dir_real . DIRECTORY_SEPARATOR ) )
+		) {
 			// Use the conventional main file name, even if it doesn't exist
 			// The checksum verification will handle missing files appropriately
 			$file = $name . '/' . $name . '.php';
