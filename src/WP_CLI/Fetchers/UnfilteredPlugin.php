@@ -9,6 +9,7 @@ namespace WP_CLI\Fetchers;
  * `all_plugins` filter, so that plugins cannot hide themselves from the
  * checks.
  *
+ * @extends Base<object{name: string, file: string}>
  */
 class UnfilteredPlugin extends Base {
 
@@ -22,9 +23,11 @@ class UnfilteredPlugin extends Base {
 	 *
 	 * @param string|int $name
 	 *
-	 * @return object|false
+	 * @return object{name: string, file: string}|false
 	 */
 	public function get( $name ) {
+		$name = (string) $name;
+
 		foreach ( get_plugins() as $file => $_ ) {
 			if ( "{$name}.php" === $file ||
 				( $name && $file === $name ) ||
