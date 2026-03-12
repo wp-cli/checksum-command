@@ -308,7 +308,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			}
 		}
 
-		return array_unique( $names );
+		return $names;
 	}
 
 	/**
