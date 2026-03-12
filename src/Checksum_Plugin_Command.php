@@ -291,20 +291,18 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		// Also scan the filesystem for plugin directories
 		$plugin_dir = WP_PLUGIN_DIR;
 		if ( is_dir( $plugin_dir ) && is_readable( $plugin_dir ) ) {
-			$dirs = @scandir( $plugin_dir ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
-			if ( false !== $dirs ) {
-				foreach ( $dirs as $dir ) {
-					// Skip special directories and files
-					if ( '.' === $dir || '..' === $dir ) {
+			try {
+				foreach ( new DirectoryIterator( $plugin_dir ) as $fileinfo ) {
+					if ( $fileinfo->isDot() || ! $fileinfo->isDir() || $fileinfo->isLink() ) {
 						continue;
 					}
-
-					$full_path = $plugin_dir . '/' . $dir;
-					// Only include real directories, not symlinks or files
-					if ( is_dir( $full_path ) && ! is_link( $full_path ) && ! in_array( $dir, $names, true ) ) {
+					$dir = $fileinfo->getFilename();
+					if ( ! in_array( $dir, $names, true ) ) {
 						$names[] = $dir;
 					}
 				}
+			} catch ( UnexpectedValueException $e ) {
+				WP_CLI::warning( "Could not scan plugin directory '{$plugin_dir}': " . $e->getMessage() );
 			}
 		}
 
