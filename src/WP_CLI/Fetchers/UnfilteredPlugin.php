@@ -27,7 +27,8 @@ class UnfilteredPlugin extends Base {
 	 */
 	public function get( $name ) {
 		$name = (string) $name;
- 		// First, check plugins detected by get_plugins()
+
+		// First, check plugins detected by get_plugins()
 		foreach ( get_plugins() as $file => $_ ) {
 			if ( "{$name}.php" === $file ||
 				( $name && $file === $name ) ||

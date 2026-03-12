@@ -96,7 +96,7 @@ site.
 Verifies plugin files against WordPress.org's checksums.
 
 ~~~
-wp plugin verify-checksums [<plugin>...] [--all] [--strict] [--version=<version>] [--format=<format>] [--insecure] [--exclude=<name>]
+wp plugin verify-checksums [<plugin>...] [--all] [--strict] [--version=<version>] [--format=<format>] [--insecure] [--exclude=<name>] [--exclude-mu-plugins]
 ~~~
 
 **OPTIONS**
@@ -131,6 +131,9 @@ wp plugin verify-checksums [<plugin>...] [--all] [--strict] [--version=<version>
 
 	[--exclude=<name>]
 		Comma separated list of plugin names that should be excluded from verifying.
+
+	[--exclude-mu-plugins]
+		Exclude must-use plugins from verification.
 
 **EXAMPLES**
 
