@@ -3,7 +3,7 @@ wp-cli/checksum-command
 
 Verifies file integrity by comparing to published checksums.
 
-[![Testing](https://github.com/wp-cli/checksum-command/actions/workflows/testing.yml/badge.svg)](https://github.com/wp-cli/checksum-command/actions/workflows/testing.yml)
+[![Testing](https://github.com/wp-cli/checksum-command/actions/workflows/testing.yml/badge.svg)](https://github.com/wp-cli/checksum-command/actions/workflows/testing.yml) [![Code Coverage](https://codecov.io/gh/wp-cli/checksum-command/branch/main/graph/badge.svg)](https://codecov.io/gh/wp-cli/checksum-command/tree/main)
 
 Quick links: [Using](#using) | [Installing](#installing) | [Contributing](#contributing) | [Support](#support)
 
