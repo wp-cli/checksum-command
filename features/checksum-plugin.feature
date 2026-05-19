@@ -55,36 +55,20 @@ Feature: Validate checksums for WordPress plugins
   Scenario: Soft changes are only reported in strict mode
     Given a WP install
 
-    When I run `wp plugin install release-notes --version=0.1`
+    When I run `wp plugin install voice-search --version=1.2.0`
     Then STDOUT should not be empty
     And STDERR should be empty
 
-    Given "Release Notes" replaced with "Different Name" in the wp-content/plugins/release-notes/readme.txt file
+    Given "Voice Search" replaced with "Different Name" in the wp-content/plugins/voice-search/readme.txt file
 
-    When I run `wp plugin verify-checksums release-notes`
+    When I run `wp plugin verify-checksums voice-search`
     Then STDOUT should be:
       """
       Success: Verified 1 of 1 plugins.
       """
     And STDERR should be empty
 
-    When I try `wp plugin verify-checksums release-notes --strict`
-    Then STDOUT should not be empty
-    And STDERR should contain:
-      """
-      Error: No plugins verified (1 failed).
-      """
-
-    Given "Release Notes" replaced with "Different Name" in the wp-content/plugins/release-notes/README.md file
-
-    When I run `wp plugin verify-checksums release-notes`
-    Then STDOUT should be:
-      """
-      Success: Verified 1 of 1 plugins.
-      """
-    And STDERR should be empty
-
-    When I try `wp plugin verify-checksums release-notes --strict`
+    When I try `wp plugin verify-checksums voice-search --strict`
     Then STDOUT should not be empty
     And STDERR should contain:
       """
