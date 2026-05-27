@@ -27,6 +27,13 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	private $errors = array();
 
 	/**
+	 * Whether to skip TLS certificate verification for remote requests.
+	 *
+	 * @var bool
+	 */
+	private $insecure = false;
+
+	/**
 	 * Verifies plugin files against WordPress.org's checksums.
 	 *
 	 * ## OPTIONS
@@ -77,13 +84,14 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 */
 	public function __invoke( $args, $assoc_args ) {
 
-		$fetcher    = new Fetchers\UnfilteredPlugin();
-		$all        = Utils\get_flag_value( $assoc_args, 'all', false );
-		$strict     = Utils\get_flag_value( $assoc_args, 'strict', false );
-		$insecure   = Utils\get_flag_value( $assoc_args, 'insecure', false );
-		$exclude_mu = Utils\get_flag_value( $assoc_args, 'exclude-mu-plugins', false );
-		$plugins    = $fetcher->get_many( $all ? $this->get_all_plugin_names() : $args );
-		$mu_plugins = ! $exclude_mu ? array_merge( get_mu_plugins(), get_plugins( '/../' . basename( WPMU_PLUGIN_DIR ) ) ) : [];
+		$fetcher        = new Fetchers\UnfilteredPlugin();
+		$all            = Utils\get_flag_value( $assoc_args, 'all', false );
+		$strict         = Utils\get_flag_value( $assoc_args, 'strict', false );
+		$this->insecure = Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$insecure       = $this->insecure;
+		$exclude_mu     = Utils\get_flag_value( $assoc_args, 'exclude-mu-plugins', false );
+		$plugins        = $fetcher->get_many( $all ? $this->get_all_plugin_names() : $args );
+		$mu_plugins     = ! $exclude_mu ? array_merge( get_mu_plugins(), get_plugins( '/../' . basename( WPMU_PLUGIN_DIR ) ) ) : [];
 
 		/**
 		 * @var string $exclude
@@ -257,48 +265,39 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		}
 
 		if ( ! array_key_exists( $path, $this->plugins_data ) ) {
-			// Try to detect version from any PHP file in the plugin directory
-			return $this->detect_version_from_directory( dirname( $path ) );
+			return $this->fetch_version_from_wp_org( dirname( $path ) );
 		}
 
 		return $this->plugins_data[ $path ]['Version'];
 	}
 
 	/**
-	 * Attempts to detect plugin version from any PHP file in the plugin directory.
+	 * Fetches the current stable plugin version from WordPress.org as a fallback.
 	 *
-	 * This is used as a fallback when the main plugin file is missing or has no valid headers.
+	 * Used when the plugin version cannot be determined locally (e.g. main file missing).
+	 * Logs a warning to indicate that the version is being assumed.
 	 *
-	 * @param string $plugin_dir Plugin directory name (relative to WP_PLUGIN_DIR).
+	 * @param string $plugin_slug Plugin slug.
 	 *
-	 * @return string|false Detected version, or false if not found.
+	 * @return string|false Stable version from WordPress.org, or false on failure.
 	 */
-	private function detect_version_from_directory( $plugin_dir ) {
-		$plugin_path = WP_PLUGIN_DIR . '/' . $plugin_dir;
+	private function fetch_version_from_wp_org( $plugin_slug ) {
+		$wp_org_api = new WpOrgApi( [ 'insecure' => $this->insecure ] );
 
-		// If it's not a directory (single-file plugin), we can't detect version
-		if ( ! is_dir( $plugin_path ) ) {
+		try {
+			$plugin_data = $wp_org_api->get_plugin_info( $plugin_slug );
+		} catch ( Exception $exception ) {
 			return false;
 		}
 
-		// Try scanning PHP files for Version header using WordPress's get_file_data()
-		$files = glob( $plugin_path . '/*.php' );
-		if ( is_array( $files ) && ! empty( $files ) ) {
-			foreach ( $files as $file ) {
-				if ( is_readable( $file ) ) {
-					$file_data = get_file_data(
-						$file,
-						array( 'Version' => 'Version' )
-					);
-					if ( ! empty( $file_data['Version'] ) ) {
-						return $file_data['Version'];
-					}
-				}
-			}
+		if ( ! is_array( $plugin_data ) || empty( $plugin_data['version'] ) ) {
+			return false;
 		}
-		// If glob() failed (returns false), version will just not be detected from PHP files
 
-		return false;
+		$version = $plugin_data['version'];
+		WP_CLI::warning( "Could not determine the version of plugin {$plugin_slug} from its files. Assuming the current stable version ({$version}) from WordPress.org." );
+
+		return $version;
 	}
 
 	/**

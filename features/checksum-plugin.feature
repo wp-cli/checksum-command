@@ -216,6 +216,10 @@ Feature: Validate checksums for WordPress plugins
       """
       Warning: Plugin duplicate-post main file is missing: duplicate-post/duplicate-post.php
       """
+    And STDERR should contain:
+      """
+      Warning: Could not determine the version of plugin duplicate-post from its files.
+      """
 
   Scenario: Verify must-use plugin that is a standard plugin moved to mu-plugins
     Given a WP install
