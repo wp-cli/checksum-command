@@ -27,6 +27,13 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	private $errors = array();
 
 	/**
+	 * Whether to skip TLS certificate verification for remote requests.
+	 *
+	 * @var bool
+	 */
+	private $insecure = false;
+
+	/**
 	 * Verifies plugin files against WordPress.org's checksums.
 	 *
 	 * ## OPTIONS
@@ -77,13 +84,14 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 	 */
 	public function __invoke( $args, $assoc_args ) {
 
-		$fetcher    = new Fetchers\UnfilteredPlugin();
-		$all        = Utils\get_flag_value( $assoc_args, 'all', false );
-		$strict     = Utils\get_flag_value( $assoc_args, 'strict', false );
-		$insecure   = Utils\get_flag_value( $assoc_args, 'insecure', false );
-		$exclude_mu = Utils\get_flag_value( $assoc_args, 'exclude-mu-plugins', false );
-		$plugins    = $fetcher->get_many( $all ? $this->get_all_plugin_names() : $args );
-		$mu_plugins = ! $exclude_mu ? array_merge( get_mu_plugins(), get_plugins( '/../' . basename( WPMU_PLUGIN_DIR ) ) ) : [];
+		$fetcher        = new Fetchers\UnfilteredPlugin();
+		$all            = Utils\get_flag_value( $assoc_args, 'all', false );
+		$strict         = Utils\get_flag_value( $assoc_args, 'strict', false );
+		$this->insecure = Utils\get_flag_value( $assoc_args, 'insecure', false );
+		$insecure       = $this->insecure;
+		$exclude_mu     = Utils\get_flag_value( $assoc_args, 'exclude-mu-plugins', false );
+		$plugins        = $fetcher->get_many( $all ? $this->get_all_plugin_names() : $args );
+		$mu_plugins     = ! $exclude_mu ? array_merge( get_mu_plugins(), get_plugins( '/../' . basename( WPMU_PLUGIN_DIR ) ) ) : [];
 
 		/**
 		 * @var string $exclude
@@ -110,6 +118,12 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			if ( 'hello' === $plugin->name ) {
 				$this->verify_hello_dolly_from_core( $assoc_args );
 				continue;
+			}
+
+			// Check if the main plugin file exists
+			$main_file_path = WP_PLUGIN_DIR . '/' . $plugin->file;
+			if ( ! file_exists( $main_file_path ) ) {
+				WP_CLI::warning( "Plugin {$plugin->name} main file is missing: {$plugin->file}" );
 			}
 
 			if ( false === $version ) {
@@ -251,21 +265,73 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		}
 
 		if ( ! array_key_exists( $path, $this->plugins_data ) ) {
-			return false;
+			return $this->fetch_version_from_wp_org( dirname( $path ) );
 		}
 
 		return $this->plugins_data[ $path ]['Version'];
 	}
 
 	/**
+	 * Fetches the current stable plugin version from WordPress.org as a fallback.
+	 *
+	 * Used when the plugin version cannot be determined locally (e.g. main file missing).
+	 * Logs a warning to indicate that the version is being assumed.
+	 *
+	 * @param string $plugin_slug Plugin slug.
+	 *
+	 * @return string|false Stable version from WordPress.org, or false on failure.
+	 */
+	private function fetch_version_from_wp_org( $plugin_slug ) {
+		$wp_org_api = new WpOrgApi( [ 'insecure' => $this->insecure ] );
+
+		try {
+			$plugin_data = $wp_org_api->get_plugin_info( $plugin_slug );
+		} catch ( Exception $exception ) {
+			return false;
+		}
+
+		if ( ! is_array( $plugin_data ) || empty( $plugin_data['version'] ) ) {
+			return false;
+		}
+
+		$version = $plugin_data['version'];
+		WP_CLI::warning( "Could not determine the version of plugin {$plugin_slug} from its files. Assuming the current stable version ({$version}) from WordPress.org." );
+
+		return $version;
+	}
+
+	/**
 	 * Gets the names of all installed plugins.
+	 *
+	 * Includes both plugins detected by get_plugins() and plugin directories
+	 * that exist on the filesystem but may not have valid headers.
 	 *
 	 * @return array<string> Names of all installed plugins.
 	 */
 	private function get_all_plugin_names() {
 		$names = array();
+
+		// Get plugins from get_plugins() (those with valid headers)
 		foreach ( get_plugins() as $file => $details ) {
 			$names[] = Utils\get_plugin_name( $file );
+		}
+
+		// Also scan the filesystem for plugin directories
+		$plugin_dir = WP_PLUGIN_DIR;
+		if ( is_dir( $plugin_dir ) && is_readable( $plugin_dir ) ) {
+			try {
+				foreach ( new DirectoryIterator( $plugin_dir ) as $fileinfo ) {
+					if ( $fileinfo->isDot() || ! $fileinfo->isDir() || $fileinfo->isLink() ) {
+						continue;
+					}
+					$dir = $fileinfo->getFilename();
+					if ( ! in_array( $dir, $names, true ) ) {
+						$names[] = $dir;
+					}
+				}
+			} catch ( UnexpectedValueException $e ) {
+				WP_CLI::warning( "Could not scan plugin directory '{$plugin_dir}': " . $e->getMessage() );
+			}
 		}
 
 		return $names;
