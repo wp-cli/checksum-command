@@ -291,3 +291,27 @@ Feature: Validate checksums for WordPress plugins
       Warning: Must-use plugin 'custom-mu-plugin.php' appears to be a custom file or loader plugin and cannot be verified.
       """
     And STDOUT should match /Success: Verified \d of \d plugins \(\d skipped\)\./
+
+  Scenario: Plugin verification is skipped when the --exclude argument contains spaces
+    Given a WP install
+
+    When I run `wp plugin delete --all`
+    Then STDOUT should contain:
+      """
+      Success:
+      """
+
+    When I run `wp plugin install akismet --ignore-requirements`
+    Then STDOUT should contain:
+      """
+      Success:
+      """
+
+    When I run `wp plugin install duplicate-post --version=3.2.1 --ignore-requirements`
+    Then STDOUT should contain:
+      """
+      Success:
+      """
+
+    When I try `wp plugin verify-checksums --all --exclude='akismet, duplicate-post'`
+    Then STDOUT should match /^Success: Verified \d of \d plugins \(\d skipped\)\./

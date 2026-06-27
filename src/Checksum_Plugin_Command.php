@@ -103,7 +103,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			WP_CLI::error( 'You need to specify either one or more plugin slugs to check or use the --all flag to check all plugins.' );
 		}
 
-		$exclude_list = explode( ',', $exclude );
+		$exclude_list = array_map( 'trim', explode( ',', $exclude ) );
 
 		$skips = 0;
 
