@@ -153,6 +153,25 @@ Feature: Validate checksums for WordPress plugins
     When I try `wp plugin verify-checksums --all --exclude=akismet`
     Then STDOUT should match /^Success: Verified \d of \d plugins \(\d skipped\)\./
 
+  Scenario: Plugin verification is skipped when --exclude entries have surrounding whitespace
+    Given a WP install
+
+    When I run `wp plugin delete --all`
+    Then STDOUT should contain:
+      """
+      Success:
+      """
+
+    # Ignore plugin's version requirements because we don't actually activate it.
+    When I run `wp plugin install akismet --ignore-requirements`
+    Then STDOUT should contain:
+      """
+      Success:
+      """
+
+    When I try `wp plugin verify-checksums --all --exclude=' akismet'`
+    Then STDOUT should match /^Success: Verified \d of \d plugins \(\d skipped\)\./
+
   Scenario: Plugin is verified when the --exclude argument isn't included
     Given a WP install
 
