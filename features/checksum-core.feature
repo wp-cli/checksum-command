@@ -312,3 +312,19 @@ Feature: Validate checksums for WordPress install
       Success: WordPress installation verifies against checksums.
       """
     And the return code should be 0
+
+  Scenario: Verify core checksums with excluded files containing spaces
+    Given a WP install
+    And "WordPress" replaced with "PressWord" in the readme.html file
+    And a wp-includes/some-filename.php file:
+      """
+      sample content of some file
+      """
+
+    When I try `wp core verify-checksums --exclude='readme.html, wp-includes/some-filename.php'`
+    Then STDERR should be empty
+    And STDOUT should be:
+      """
+      Success: WordPress installation verifies against checksums.
+      """
+    And the return code should be 0

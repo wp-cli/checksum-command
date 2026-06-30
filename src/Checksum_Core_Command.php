@@ -126,7 +126,7 @@ class Checksum_Core_Command extends Checksum_Base_Command {
 		if ( ! empty( $assoc_args['exclude'] ) ) {
 			$exclude = Utils\get_flag_value( $assoc_args, 'exclude', '' );
 
-			$this->exclude_files = explode( ',', $exclude );
+			$this->exclude_files = array_map( 'trim', explode( ',', $exclude ) );
 		}
 
 		if ( empty( $wp_version ) ) {
