@@ -294,6 +294,7 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 			return false;
 		}
 
+		/** @var array{version: string} $plugin_data */
 		$version = $plugin_data['version'];
 		WP_CLI::warning( "Could not determine the version of plugin {$plugin_slug} from its files. Assuming the current stable version ({$version}) from WordPress.org." );
 
