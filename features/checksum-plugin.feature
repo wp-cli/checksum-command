@@ -115,10 +115,13 @@ Feature: Validate checksums for WordPress plugins
        * Plugin Name: Hide Debug Bar plugin
        */
 
-       add_filter( 'all_plugins', function( $all_plugins ) {
-          unset( $all_plugins['debug-bar/debug-bar.php'] );
-          return $all_plugins;
-       } );
+      add_filter(
+          'all_plugins',
+          function ( $all_plugins ) {
+              unset( $all_plugins['debug-bar/debug-bar.php'] );
+              return $all_plugins;
+          }
+      );
       """
     And "Debug Bar" replaced with "Different Name" in the wp-content/plugins/debug-bar/debug-bar.php file
 
