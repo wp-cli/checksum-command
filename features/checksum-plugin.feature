@@ -52,6 +52,41 @@ Feature: Validate checksums for WordPress plugins
       Error: No plugins verified (1 failed).
       """
 
+  Scenario: Downloads the checksums of several plugins at once
+    Given a WP install
+    And a wp-content/plugins/custom-plugin/custom-plugin.php file:
+      """
+      <?php
+      /**
+       * Plugin Name: Custom Plugin
+       * Version: 1.0
+       */
+      """
+
+    When I run `wp plugin install duplicate-post --version=3.2.1`
+    And I run `wp plugin install voice-search --version=1.2.0`
+    Then STDERR should be empty
+
+    Given "Duplicate Post" replaced with "Different Name" in the wp-content/plugins/duplicate-post/duplicate-post.php file
+
+    When I try `wp plugin verify-checksums duplicate-post voice-search custom-plugin --format=json --debug=checksum`
+    Then STDOUT should contain:
+      """
+      "plugin_name":"duplicate-post","file":"duplicate-post.php","message":"Checksum does not match"
+      """
+    And STDERR should contain:
+      """
+      Downloaded the checksums of 2 of 3 plugins in parallel.
+      """
+    And STDERR should contain:
+      """
+      Warning: Could not retrieve the checksums for version 1.0 of plugin custom-plugin, skipping.
+      """
+    And STDERR should contain:
+      """
+      Error: Only verified 1 of 3 plugins (1 failed, 1 skipped).
+      """
+
   Scenario: Soft changes are only reported in strict mode
     Given a WP install
 
