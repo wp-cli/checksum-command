@@ -2,6 +2,7 @@
 
 use WP_CLI\Fetchers;
 use WP_CLI\Formatter;
+use WP_CLI\RequestsLibrary;
 use WP_CLI\Utils;
 use WP_CLI\WpOrgApi;
 
@@ -107,8 +108,19 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 
 		$skips = 0;
 
+		$versions = [];
 		foreach ( $plugins as $plugin ) {
-			$version = empty( $version_arg ) ? $this->get_plugin_version( $plugin->file ) : $version_arg;
+			if ( 'hello' === $plugin->name || in_array( $plugin->name, $exclude_list, true ) ) {
+				continue;
+			}
+
+			$versions[ $plugin->file ] = empty( $version_arg ) ? $this->get_plugin_version( $plugin->file ) : $version_arg;
+		}
+
+		$prefetched = $this->prefetch_plugin_checksums( $plugins, $versions );
+
+		foreach ( $plugins as $plugin ) {
+			$version = isset( $versions[ $plugin->file ] ) ? $versions[ $plugin->file ] : false;
 
 			if ( in_array( $plugin->name, $exclude_list, true ) ) {
 				++$skips;
@@ -132,16 +144,20 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 				continue;
 			}
 
-			$wp_org_api = new WpOrgApi( [ 'insecure' => $insecure ] );
+			if ( isset( $prefetched[ $plugin->file ] ) ) {
+				$checksums = $prefetched[ $plugin->file ];
+			} else {
+				$wp_org_api = new WpOrgApi( [ 'insecure' => $insecure ] );
 
-			try {
-				/**
-				 * @var array|false $checksums
-				 */
-				$checksums = $wp_org_api->get_plugin_checksums( $plugin->name, $version );
-			} catch ( Exception $exception ) {
-				WP_CLI::warning( $exception->getMessage() );
-				$checksums = false;
+				try {
+					/**
+					 * @var array|false $checksums
+					 */
+					$checksums = $wp_org_api->get_plugin_checksums( $plugin->name, $version );
+				} catch ( Exception $exception ) {
+					WP_CLI::warning( $exception->getMessage() );
+					$checksums = false;
+				}
 			}
 
 			if ( false === $checksums ) {
@@ -249,6 +265,82 @@ class Checksum_Plugin_Command extends Checksum_Base_Command {
 		$error['file']        = $file;
 		$error['message']     = $message;
 		$this->errors[]       = $error;
+	}
+
+	/**
+	 * Downloads the checksums of several plugins at once.
+	 *
+	 * This only saves time. Checksums that aren't downloaded here, because a
+	 * request failed or returned something unexpected, are downloaded again
+	 * one at a time, with the usual retries and error messages.
+	 *
+	 * @param array<object{name: string, file: string}> $plugins  Plugins to verify.
+	 * @param array<string, string|false>              $versions Plugin versions, keyed by plugin file.
+	 * @return array<string, array<mixed>> Checksums, keyed by plugin file.
+	 */
+	private function prefetch_plugin_checksums( $plugins, $versions ) {
+		$requests = [];
+		foreach ( $plugins as $plugin ) {
+			if ( empty( $versions[ $plugin->file ] ) ) {
+				continue;
+			}
+
+			$requests[ $plugin->file ] = [
+				'url'     => sprintf( '%s%s/%s.json', WpOrgApi::PLUGIN_CHECKSUMS_ENDPOINT, $plugin->name, $versions[ $plugin->file ] ),
+				'headers' => [ 'Accept' => 'application/json' ],
+			];
+		}
+
+		if ( count( $requests ) < 2 ) {
+			return [];
+		}
+
+		$options = [ 'verify' => ! empty( ini_get( 'curl.cainfo' ) ) ? ini_get( 'curl.cainfo' ) : true ];
+
+		foreach ( $requests as $file => $request ) {
+			// Let the same filter apply as to every other request WP-CLI makes.
+			$request_options = WP_CLI::do_hook( 'http_request_options', $options, 'GET', $request['url'], null, $request['headers'] );
+
+			$requests[ $file ]['options'] = is_array( $request_options ) ? $request_options : $options;
+		}
+
+		RequestsLibrary::register_autoloader();
+
+		/** @var callable $request_multiple */
+		$request_multiple = [ RequestsLibrary::get_class_name(), 'request_multiple' ];
+
+		$checksums = [];
+
+		// Limit the number of simultaneous connections to WordPress.org.
+		foreach ( array_chunk( $requests, 10, true ) as $chunk ) {
+			try {
+				/** @var array<string, mixed> $responses */
+				$responses = $request_multiple( $chunk, $options );
+			} catch ( Exception $exception ) {
+				continue;
+			}
+
+			foreach ( $responses as $file => $response ) {
+				if (
+					! is_object( $response )
+					|| ! isset( $response->success, $response->status_code, $response->body )
+					|| ! $response->success
+					|| 200 !== (int) $response->status_code
+				) {
+					continue;
+				}
+
+				$data = json_decode( (string) $response->body, true );
+
+				if ( is_array( $data ) && isset( $data['files'] ) && is_array( $data['files'] ) ) {
+					$checksums[ $file ] = $data['files'];
+				}
+			}
+		}
+
+		WP_CLI::debug( sprintf( 'Downloaded the checksums of %d of %d plugins in parallel.', count( $checksums ), count( $requests ) ), 'checksum' );
+
+		return $checksums;
 	}
 
 	/**
